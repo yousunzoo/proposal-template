@@ -10,9 +10,11 @@ import { ProposalBody, visibleNav } from './ProposalBody';
 export function ProposalView({
   proposal,
   itemBase,
+  pdfHref,
 }: {
   proposal: ProposalDto;
   itemBase: string;
+  pdfHref?: string;
 }) {
   const s = proposal.sections;
   if (!s) {
@@ -27,8 +29,8 @@ export function ProposalView({
 
   return (
     <MotionRoot>
-      <SidebarNav items={nav} title={proposal.title} />
-      <div className="lg:pl-[248px]">
+      <SidebarNav items={nav} title={proposal.title} pdfHref={pdfHref} />
+      <div data-proposal-content className="lg:pl-[248px]">
         <main>
           <ProposalBody
             doc={s}

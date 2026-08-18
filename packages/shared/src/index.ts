@@ -142,11 +142,15 @@ export const DEFAULT_TITLES: Record<SectionId, string> = {
   promise: '성공을 향한 약속',
 };
 
+/** 인사말 기본 도입 문구. 제안서별로 수정 가능하며, 신규/레거시 문서의 초기값으로만 사용한다. */
+export const DEFAULT_GREETING_INTRO =
+  '제안 기회를 주셔서 감사합니다. 요구사항을 면밀히 검토해, 이번 프로젝트에 가장 적합하다고 판단한 방향을 이 제안서에 담았습니다.';
+
 /* ────────────────────────────────────────────────────────────
  * 제안서 문서 (DB sections Json 컬럼에 저장)
  * ──────────────────────────────────────────────────────────── */
 export interface ProposalSectionsData {
-  greeting: { body: string };
+  greeting: { title: string; intro: string; body: string };
   about: { title: string; intro: string[]; values: AboutValue[] };
   team: { title: string; intro: string; groups: TeamGroupEntry[]; bullets: string[] };
   analysis: { title: string; content: string };
@@ -329,7 +333,7 @@ export function buildDefaultTimeline(totalWeeks: number): TimelinePhase[] {
 /** 완전한 기본 문서 */
 export function createDefaultDoc(): ProposalSectionsData {
   return {
-    greeting: { body: '' },
+    greeting: { title: DEFAULT_TITLES.greeting, intro: DEFAULT_GREETING_INTRO, body: '' },
     about: { title: DEFAULT_TITLES.about, intro: DEFAULT_ABOUT_INTRO, values: DEFAULT_ABOUT_VALUES },
     team: {
       title: DEFAULT_TITLES.team,

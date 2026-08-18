@@ -5,9 +5,8 @@ import { PROJECTS } from '@/entities/portfolio';
 import { portfolioLabel } from '@/lib/portfolio';
 import { Reveal } from '@/components/proposal/reveal';
 import { Eyebrow, Chip } from '@/components/ui';
-import { Check } from '@/shared/icons';
+import { ArrowRight, Check } from '@/shared/icons';
 import { Markdown } from '@/components/proposal/Markdown';
-import { GREETING_FIXED_INTRO } from '@/constants/greeting';
 import { cn } from '@/lib/cn';
 
 type Doc = ProposalSectionsData;
@@ -86,6 +85,8 @@ export function HeroSection({
   greeting: Doc['greeting'];
   info: ProjectInfo;
 }) {
+  const headline = greeting.title?.trim() || title;
+  const intro = greeting.intro?.trim() ?? '';
   const paragraphs = toParagraphs(greeting.body ?? '');
   const meta: { k: string; v: string }[] = [];
   if (info.budget) meta.push({ k: '예산', v: info.budget });
@@ -94,12 +95,13 @@ export function HeroSection({
     <section id="greeting" aria-label="인사말" className="section-anchor scroll-mt-24">
       <div className="shell px-5 py-20 lg:px-8 lg:py-28">
         <h1 className="mt-4 text-[34px] font-bold leading-[1.12] tracking-[-0.03em] text-ink-900 lg:text-[54px]">
-          {title}
+          {headline}
         </h1>
-        {/* 고정 도입부 — 모든 제안서 공통(고정값) */}
-        <p className="mt-6 text-[17px] leading-[1.7] text-ink-600 lg:text-xl">
-          {GREETING_FIXED_INTRO}
-        </p>
+        {intro && (
+          <p className="mt-6 text-[17px] leading-[1.7] text-ink-600 lg:text-xl">
+            {intro}
+          </p>
+        )}
         {meta.length > 0 && (
           <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4 border-t border-line pt-6">
             {meta.map((m) => (
@@ -112,7 +114,7 @@ export function HeroSection({
         )}
         {/* 동적 인사말 본문(원문/AI 도출) */}
         {paragraphs.length > 0 && (
-          <div className="mt-10 grid gap-x-12 gap-y-4 lg:grid-cols-2">
+          <div className="mt-10 flex flex-col gap-4">
             {paragraphs.map((p, i) => (
               <p key={i} className="text-[15px] leading-[1.85] text-ink-600 lg:text-base">
                 {p}
@@ -347,10 +349,19 @@ export function PortfolioSection({
                       sizes="(max-width: 640px) 100vw, 360px"
                       className="object-cover"
                     />
+                    <span className="absolute bottom-3 right-3 inline-flex h-8 items-center gap-1.5 rounded-full border border-line bg-surface/95 px-3 text-[12px] font-semibold text-blue-700 transition-colors duration-200 group-hover:border-blue-500 group-hover:bg-blue-600 group-hover:text-white">
+                      더보기
+                      <ArrowRight
+                        width={13}
+                        height={13}
+                        aria-hidden="true"
+                        className="transition-transform duration-200 group-hover:translate-x-0.5"
+                      />
+                    </span>
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-1 flex-col">
                     <span className="text-[12px] font-medium text-ink-500">{category}</span>
-                    <h3 className="mt-1 text-[17px] font-semibold tracking-[-0.01em] text-ink-900 transition-colors group-hover:text-blue-600">
+                    <h3 className="mt-1 text-[17px] font-semibold tracking-[-0.01em] text-ink-900 transition-colors duration-200 group-hover:text-blue-600">
                       {portfolioLabel(title).name}
                       {portfolioLabel(title).descriptor && (
                         <span className="mt-0.5 block text-[14px] font-normal text-ink-500">

@@ -52,7 +52,11 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
         setProposal(p);
         setTitle(p.title);
         setInfo(p.projectInfo ?? {});
-        setDoc(p.sections ? assignKeys(normalizeDoc(p.sections)) : null);
+        const nextDoc = p.sections ? normalizeDoc(p.sections) : null;
+        if (nextDoc && !nextDoc.greeting.title.trim()) {
+          nextDoc.greeting.title = p.title;
+        }
+        setDoc(nextDoc ? assignKeys(nextDoc) : null);
         setPortfolioSlugs(p.portfolioSlugs);
         if (p.published && p.slug) setPublishedUrl(`${window.location.origin}/p/${p.slug}`);
       })

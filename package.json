@@ -12,6 +12,6 @@
     "db:studio": "pnpm --filter web exec prisma studio"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.17"
   }
 }

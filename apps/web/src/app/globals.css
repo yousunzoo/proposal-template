@@ -127,3 +127,65 @@ p {
 .section-anchor {
   scroll-margin-top: 88px;
 }
+
+@media print {
+  @page {
+    size: 1440px 1080px;
+    margin: 0;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html {
+    scroll-padding-top: 0;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  [data-proposal-chrome] {
+    display: none !important;
+  }
+
+  [data-proposal-content] {
+    padding-left: 0 !important;
+  }
+
+  .section-anchor {
+    box-sizing: border-box;
+    min-height: 1080px;
+    break-after: page;
+    page-break-after: always;
+    scroll-margin-top: 0;
+  }
+
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .section-anchor:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

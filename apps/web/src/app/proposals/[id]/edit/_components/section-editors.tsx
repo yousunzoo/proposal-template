@@ -32,7 +32,7 @@ export function ProjectInfoEditor({
 }) {
   return (
     <>
-      <Field label="제안서 제목" hint="표지 헤드라인으로 사용됩니다.">
+      <Field label="제안서 제목" hint="관리 화면과 브라우저 제목에 사용됩니다.">
         <TextInput value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -63,13 +63,28 @@ export function ProjectInfoEditor({
 
 function GreetingEditor({ doc, update }: EditorProps) {
   return (
-    <Field label="본문" hint="첫 문단이 리드 문장으로 강조됩니다.">
-      <TextArea
-        value={doc.greeting.body}
-        onChange={(e) => update((d) => { d.greeting.body = e.target.value; })}
-        className="h-[200px]"
-      />
-    </Field>
+    <>
+      <Field label="인사말 헤드라인" hint="공개 제안서 첫 화면의 큰 제목입니다.">
+        <TextInput
+          value={doc.greeting.title}
+          onChange={(e) => update((d) => { d.greeting.title = e.target.value; })}
+        />
+      </Field>
+      <Field label="인사말 도입 문구" hint="헤드라인 아래에 노출되는 문장입니다." className="mt-4">
+        <TextArea
+          value={doc.greeting.intro}
+          onChange={(e) => update((d) => { d.greeting.intro = e.target.value; })}
+          className="h-[96px]"
+        />
+      </Field>
+      <Field label="본문" hint="도입 문구 아래에 이어지는 상세 인사말입니다." className="mt-4">
+        <TextArea
+          value={doc.greeting.body}
+          onChange={(e) => update((d) => { d.greeting.body = e.target.value; })}
+          className="h-[200px]"
+        />
+      </Field>
+    </>
   );
 }
 

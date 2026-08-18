@@ -4,7 +4,7 @@ import type {
   SectionId,
   SectionLayoutItem,
 } from '@proposal/shared';
-import { DEFAULT_TITLES, SECTION_ORDER, blocksToMarkdown } from '@proposal/shared';
+import { DEFAULT_GREETING_INTRO, DEFAULT_TITLES, SECTION_ORDER, blocksToMarkdown } from '@proposal/shared';
 import {
   DEFAULT_ABOUT_INTRO,
   DEFAULT_ABOUT_VALUES,
@@ -360,7 +360,7 @@ export function assembleDoc(
   const ganttWeeks = Math.min(12, totalWeeks);
 
   return {
-    greeting: { body: parts.greetingBody },
+    greeting: { title: DEFAULT_TITLES.greeting, intro: DEFAULT_GREETING_INTRO, body: parts.greetingBody },
     about: {
       title: DEFAULT_TITLES.about,
       intro: DEFAULT_ABOUT_INTRO,

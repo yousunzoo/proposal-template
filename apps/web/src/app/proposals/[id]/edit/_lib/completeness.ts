@@ -12,7 +12,7 @@ function has(v: string | undefined | null): boolean {
 export function isSectionFilled(doc: ProposalSectionsData, id: SectionId): boolean {
   switch (id) {
     case 'greeting':
-      return has(doc.greeting.body);
+      return has(doc.greeting.title) || has(doc.greeting.intro) || has(doc.greeting.body);
     case 'about':
       return doc.about.intro.some(has) || doc.about.values.some((v) => has(v.title) || has(v.body));
     case 'team':

@@ -122,6 +122,9 @@ export async function generateProposal(id: string): Promise<ProposalDto> {
       hasPortfolioItems,
     });
   }
+  if (!sections.greeting.title.trim()) {
+    sections.greeting.title = p.title;
+  }
 
   const updated = await prisma.proposal.update({
     where: { id },

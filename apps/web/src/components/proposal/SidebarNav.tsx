@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { Download } from '@/shared/icons';
 
 export interface NavItem {
   id: string;
@@ -9,8 +10,18 @@ export interface NavItem {
 }
 
 /** 좌측 고정 사이드바 + 스크롤 스파이. 모바일에서는 상단 가로 탭으로 전환. */
-export function SidebarNav({ items, title }: { items: NavItem[]; title: string }) {
+export function SidebarNav({
+  items,
+  title,
+  pdfHref,
+}: {
+  items: NavItem[];
+  title: string;
+  pdfHref?: string;
+}) {
   const [active, setActive] = useState(items[0]?.id ?? '');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => {
     const sections = items
@@ -41,10 +52,45 @@ export function SidebarNav({ items, title }: { items: NavItem[]; title: string }
     }
   }
 
+  function readFilename(contentDisposition: string | null) {
+    if (!contentDisposition) return `${title}.pdf`;
+    const encoded = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (encoded) return decodeURIComponent(encoded);
+    const plain = contentDisposition.match(/filename="?([^";]+)"?/i)?.[1];
+    return plain || `${title}.pdf`;
+  }
+
+  async function handlePdfDownload() {
+    if (!pdfHref || isDownloading) return;
+    setIsDownloading(true);
+    setDownloadError('');
+
+    try {
+      const res = await fetch(pdfHref, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`PDF request failed: ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = readFilename(res.headers.get('Content-Disposition'));
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError('PDF 생성에 실패했습니다.');
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
   return (
     <>
       {/* 데스크톱: 좌측 고정 */}
-      <aside className="fixed left-0 top-0 z-20 hidden h-screen w-[248px] flex-col border-r border-line bg-surface/90 backdrop-blur-xl lg:flex">
+      <aside
+        data-proposal-chrome
+        className="fixed left-0 top-0 z-20 hidden h-screen w-[248px] flex-col border-r border-line bg-surface/90 backdrop-blur-xl lg:flex"
+      >
         <div className="border-b border-line px-6 py-7">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-600">제안서</p>
           <p className="mt-2.5 line-clamp-3 text-[15px] font-bold leading-[1.4] tracking-[-0.3px] text-ink-900">
@@ -81,10 +127,31 @@ export function SidebarNav({ items, title }: { items: NavItem[]; title: string }
             })}
           </ul>
         </nav>
+        {pdfHref && (
+          <div className="border-t border-line p-4">
+            <button
+              type="button"
+              onClick={handlePdfDownload}
+              disabled={isDownloading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-[14px] font-semibold text-white shadow-[0_1px_2px_rgba(15,23,42,0.08),0_8px_18px_-10px_rgba(0,126,229,0.65)] transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:bg-blue-700 disabled:cursor-wait disabled:opacity-70"
+            >
+              <Download width={16} height={16} aria-hidden="true" />
+              {isDownloading ? 'PDF 생성 중' : 'PDF 다운로드'}
+            </button>
+            {downloadError && (
+              <p className="mt-2 text-[12px] font-medium text-red-500" role="status">
+                {downloadError}
+              </p>
+            )}
+          </div>
+        )}
       </aside>
 
       {/* 모바일: 상단 가로 스크롤 탭 */}
-      <div className="relative sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur-xl lg:hidden">
+      <div
+        data-proposal-chrome
+        className="relative sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur-xl lg:hidden"
+      >
         <nav aria-label="제안서 섹션" className="flex gap-1 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {items.map((it) => (
             <a
@@ -102,6 +169,17 @@ export function SidebarNav({ items, title }: { items: NavItem[]; title: string }
               {it.label}
             </a>
           ))}
+          {pdfHref && (
+            <button
+              type="button"
+              onClick={handlePdfDownload}
+              disabled={isDownloading}
+              className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-blue-700 px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:cursor-wait disabled:opacity-70"
+            >
+              <Download width={14} height={14} aria-hidden="true" />
+              {isDownloading ? '생성 중' : 'PDF'}
+            </button>
+          )}
         </nav>
         <div
           aria-hidden="true"
