@@ -1,0 +1,26 @@
+node_modules
+dist
+.next
+out
+build
+
+# env
+.env
+.env.local
+.env.*.local
+
+# prisma / sqlite (legacy)
+*.db
+*.db-journal
+
+# misc
+.DS_Store
+*.log
+.turbo
+
+# 로컬 툴링 상태 (oh-my-claudecode 등)
+.omc/
+**/.omc/
+
+# 로컬 백업(레거시 API 데이터·비밀 포함)
+backup/

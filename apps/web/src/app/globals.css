@@ -1,0 +1,111 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
+@import 'tailwindcss';
+
+/*
+ * ============================================================
+ * 제안서 템플릿 — 에디토리얼 문서(dossier) 톤
+ * 잉크-온-페이퍼 · 헤어라인 규칙 · 절제된 단일 액센트(clickb blue)
+ * ============================================================
+ */
+@theme {
+  /* ── Blue (clickb 액센트, 절제 사용) ── */
+  --color-blue-50: #e8f4ff;
+  --color-blue-100: #d1e9ff;
+  --color-blue-200: #a3d3ff;
+  --color-blue-300: #75bdff;
+  --color-blue-400: #47a7ff;
+  --color-blue-500: #1b98ff;
+  --color-blue-600: #007ee5;
+  --color-blue-700: #0065b8;
+  --color-blue-800: #004c8a;
+  --color-blue-900: #00325c;
+
+  /* ── Neutral — 쿨 슬레이트 ── */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+
+  /* ── 상태 액센트 ── */
+  --color-red-500: #dc2626;
+  --color-orange-500: #d97706;
+  --color-green-500: #16a34a;
+  --color-green-600: #15803d;
+  --color-green-700: #166534;
+
+  /* ── 시맨틱 별칭 ── */
+  --color-brand-50: #e8f4ff;
+  --color-brand-100: #d1e9ff;
+  --color-brand-200: #a3d3ff;
+  --color-brand-300: #75bdff;
+  --color-brand-400: #47a7ff;
+  --color-brand-500: #1b98ff;
+  --color-brand-600: #007ee5;
+  --color-brand-700: #0065b8;
+
+  /* 텍스트 잉크 (dark-on-white) */
+  --color-ink-900: #0f172a;
+  --color-ink-700: #334155;
+  --color-ink-600: #475569;
+  --color-ink-500: #64748b;
+  --color-ink-400: #94a3b8;
+
+  /* 표면 (클린 화이트) */
+  --color-canvas: #ffffff;
+  --color-surface: #ffffff;
+  --color-elevated: #f5f7fa;
+  --color-line: #e7ebf1;
+  --color-line-strong: #d3dae4;
+
+  --color-accent-amber: #d97706;
+  --color-accent-green: #16a34a;
+
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+
+  --radius-card: 0.625rem;
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'calt', 'kern', 'ss01';
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.section-anchor {
+  scroll-margin-top: 88px;
+}

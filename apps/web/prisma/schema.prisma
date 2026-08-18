@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // 서버리스: 풀링 커넥션(pgbouncer). Neon "Pooled connection" 문자열 사용.
+  url       = env("DATABASE_URL")
+  // 마이그레이션/DDL용 직결 커넥션. Neon "Direct connection" 문자열.
+  directUrl = env("DIRECT_URL")
+}
+
+/// 제안서 1건. Postgres지만 기존 로직 호환을 위해 JSON은 문자열 컬럼으로 유지한다.
+model Proposal {
+  id                  String   @id @default(cuid())
+  /// 발행 시 발급되는 공개 slug (/p/[slug])
+  slug                String?  @unique
+  title               String
+  /// ProjectInfo JSON 문자열
+  projectInfo         String   @default("{}")
+  /// 제안서 원본 텍스트 (◼︎ 마커 포함)
+  rawProposalContent  String
+  /// 포트폴리오 원본 텍스트
+  rawPortfolioContent String   @default("")
+  /// ProposalSectionsData JSON 문자열 (generate 후 채워짐)
+  sections            String?
+  /// 연결된 포트폴리오 slug 배열 JSON 문자열
+  portfolioSlugs      String   @default("[]")
+  published           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
