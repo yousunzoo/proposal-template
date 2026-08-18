@@ -18,8 +18,6 @@ export type ContentBlock =
  * 프로젝트 정보
  * ──────────────────────────────────────────────────────────── */
 export interface ProjectInfo {
-  clientName?: string;
-  categories?: string;
   skills?: string;
   budget?: string;
   duration?: string;
@@ -151,7 +149,7 @@ export interface ProposalSectionsData {
   greeting: { body: string };
   about: { title: string; intro: string[]; values: AboutValue[] };
   team: { title: string; intro: string; groups: TeamGroupEntry[]; bullets: string[] };
-  analysis: { title: string; lead: string; blocks: ContentBlock[] };
+  analysis: { title: string; content: string };
   strategy: { title: string; items: StrategyItem[] };
   estimate: {
     title: string;
@@ -339,7 +337,7 @@ export function createDefaultDoc(): ProposalSectionsData {
       groups: DEFAULT_TEAM_GROUPS,
       bullets: DEFAULT_TEAM_BULLETS,
     },
-    analysis: { title: DEFAULT_TITLES.analysis, lead: '', blocks: [] },
+    analysis: { title: DEFAULT_TITLES.analysis, content: '' },
     strategy: { title: DEFAULT_TITLES.strategy, items: DEFAULT_STRATEGY },
     estimate: {
       title: DEFAULT_TITLES.estimate,
@@ -365,6 +363,33 @@ export function createDefaultDoc(): ProposalSectionsData {
   };
 }
 
+/** 레거시 분석 블록(lead + ContentBlock[])을 마크다운 문자열로 변환한다(하위 호환용). */
+export function blocksToMarkdown(lead: string, blocks: ContentBlock[]): string {
+  const parts: string[] = [];
+  if (lead?.trim()) parts.push(lead.trim());
+  for (const b of blocks ?? []) {
+    if (b.kind === 'heading' && b.text?.trim()) parts.push(`## ${b.text.trim()}`);
+    else if (b.kind === 'feature' && (b.title?.trim() || b.body?.trim()))
+      parts.push(`### ${(b.title ?? '').trim()}${b.body?.trim() ? `\n\n${b.body.trim()}` : ''}`);
+    else if (b.kind === 'list' && b.items?.length)
+      parts.push(b.items.filter((it) => it?.trim()).map((it) => `- ${it.trim()}`).join('\n'));
+    else if (b.kind === 'paragraph' && b.text?.trim()) parts.push(b.text.trim());
+  }
+  return parts.join('\n\n');
+}
+
+/** analysis 섹션 정규화: 신규 {content}는 그대로, 레거시 {lead, blocks}는 마크다운으로 변환. */
+function normalizeAnalysis(input: unknown): { title: string; content: string } {
+  const def = createDefaultDoc().analysis;
+  if (!input || typeof input !== 'object') return def;
+  const a = input as Record<string, unknown>;
+  const title = typeof a.title === 'string' && a.title.trim() ? a.title : def.title;
+  if (typeof a.content === 'string') return { title, content: a.content };
+  const lead = typeof a.lead === 'string' ? a.lead : '';
+  const blocks = Array.isArray(a.blocks) ? (a.blocks as ContentBlock[]) : [];
+  return { title, content: lead || blocks.length ? blocksToMarkdown(lead, blocks) : '' };
+}
+
 /**
  * 부분/구버전 sections를 완전한 문서로 정규화한다.
  * 구버전(고정 섹션·title·layout 없음)도 안전하게 렌더/편집되도록 결측 필드를 기본값으로 채운다.
@@ -385,7 +410,7 @@ export function normalizeDoc(
     greeting: merge('greeting'),
     about: merge('about'),
     team: merge('team'),
-    analysis: merge('analysis'),
+    analysis: normalizeAnalysis(i.analysis),
     strategy: merge('strategy'),
     estimate: merge('estimate'),
     portfolio: merge('portfolio'),

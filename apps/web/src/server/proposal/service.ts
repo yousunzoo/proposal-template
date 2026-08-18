@@ -12,6 +12,7 @@ import { prisma } from '../db';
 import { HttpError } from '../http';
 import { parseProposal, assembleDoc, parseAmount, parsePeriodDays } from './parser';
 import { structure } from './ai-structure';
+import { suggestPortfolioSlugs } from '@/lib/portfolio';
 
 /** DB row(JSON 문자열 컬럼) → DTO 변환 */
 function toDto(p: Proposal): ProposalDto {
@@ -93,6 +94,14 @@ export async function generateProposal(id: string): Promise<ProposalDto> {
   if (!p) throw new HttpError(404, '제안서를 찾을 수 없습니다.');
 
   const info = safeJson<ProjectInfo>(p.projectInfo, {});
+  const selectedSlugs = safeJson<string[]>(p.portfolioSlugs, []);
+  // 사용자가 관련 포트폴리오를 직접 고르지 않았으면 본문 기반으로 자동 추천한다.
+  const portfolioSlugs = selectedSlugs.length
+    ? selectedSlugs
+    : suggestPortfolioSlugs(
+        `${p.rawProposalContent}\n${p.rawPortfolioContent}\n${info.skills ?? ''}`,
+      );
+  const hasPortfolioItems = portfolioSlugs.length > 0;
 
   let sections: ProposalSectionsData;
   const parts = await structure(p.rawProposalContent, p.rawPortfolioContent);
@@ -105,17 +114,22 @@ export async function generateProposal(id: string): Promise<ProposalDto> {
       parts.estimate.period = info.duration;
       parts.estimate.periodValue = parsePeriodDays(info.duration);
     }
-    sections = assembleDoc(parts);
+    sections = assembleDoc(parts, { hasPortfolioItems });
   } else {
     sections = parseProposal(p.rawProposalContent, {
       budget: info.budget,
       duration: info.duration,
+      hasPortfolioItems,
     });
   }
 
   const updated = await prisma.proposal.update({
     where: { id },
-    data: { sections: JSON.stringify(sections) },
+    data: {
+      sections: JSON.stringify(sections),
+      // 자동 추천분은 저장해 편집·발행에도 반영한다(직접 고른 경우는 건드리지 않음).
+      ...(selectedSlugs.length ? {} : { portfolioSlugs: JSON.stringify(portfolioSlugs) }),
+    },
   });
   return toDto(updated);
 }

@@ -1,5 +1,10 @@
-import type { ContentBlock, ProposalSectionsData } from '@proposal/shared';
-import { DEFAULT_TITLES, defaultLayout } from '@proposal/shared';
+import type {
+  ContentBlock,
+  ProposalSectionsData,
+  SectionId,
+  SectionLayoutItem,
+} from '@proposal/shared';
+import { DEFAULT_TITLES, SECTION_ORDER, blocksToMarkdown } from '@proposal/shared';
 import {
   DEFAULT_ABOUT_INTRO,
   DEFAULT_ABOUT_VALUES,
@@ -109,18 +114,26 @@ function parseAnalysis(body: string): { lead: string; blocks: ContentBlock[] } {
       continue;
     }
 
-    // "N. 제목" 또는 "N) 제목" 단독 라인 → 새 feature 시작 (번호 재부여)
-    const featureTitle =
-      paraLines[0].match(/^\d+\.\s+(.+)$/) || paraLines[0].match(/^\d+\)\s+(.+)$/);
-    if (featureTitle && paraLines.length === 1) {
-      featureCount += 1;
-      currentFeature = {
-        kind: 'feature',
-        index: String(featureCount).padStart(2, '0'),
-        title: featureTitle[1].trim(),
-        body: '',
-      };
-      blocks.push(currentFeature);
+    // "N. 제목" / "N) 제목"으로 시작하는 문단 → feature.
+    // 제목 다음 줄에 본문이 빈 줄 없이 이어져도(가장 흔한 서술 방식) 올바로 분리한다.
+    // 한 문단에 번호 줄이 여러 개면 각각 별도 feature, 비번호 줄은 직전 feature 본문으로 이어붙인다.
+    // (모든 줄이 어딘가에 담기므로 내용 소실이 없다)
+    if (/^\d+[.)]\s+/.test(paraLines[0])) {
+      for (const line of paraLines) {
+        const m = line.match(/^\d+[.)]\s+(.+)$/);
+        if (m) {
+          featureCount += 1;
+          currentFeature = {
+            kind: 'feature',
+            index: String(featureCount).padStart(2, '0'),
+            title: m[1].trim(),
+            body: '',
+          };
+          blocks.push(currentFeature);
+        } else if (currentFeature) {
+          currentFeature.body = currentFeature.body ? `${currentFeature.body} ${line}` : line;
+        }
+      }
       continue;
     }
 
@@ -130,6 +143,21 @@ function parseAnalysis(body: string): { lead: string; blocks: ContentBlock[] } {
       blocks.push({
         kind: 'list',
         items: paraLines.map((l) => l.replace(/^[-•]\s+/, '').trim()),
+      });
+      continue;
+    }
+
+    // 첫째·둘째·셋째… 서수 열거 → 리스트로 승격.
+    // (한 문단에 뭉쳐 run-on 문장이 되는 것을 막고 핵심 포인트를 스캔 가능하게 한다)
+    const ORDINAL = /^(첫째|둘째|셋째|넷째|다섯째|여섯째|일곱째)\s*[,.·、]?\s*(.+)$/;
+    if (paraLines.length > 1 && paraLines.filter((l) => ORDINAL.test(l)).length >= 2) {
+      currentFeature = null;
+      blocks.push({
+        kind: 'list',
+        items: paraLines.map((l) => {
+          const m = l.match(ORDINAL);
+          return (m ? m[2] : l).trim();
+        }),
       });
       continue;
     }
@@ -236,6 +264,8 @@ function parseCommitments(paragraphs: string[]): string[] {
 export interface ParseContext {
   budget?: string;
   duration?: string;
+  /** 선택된 관련 포트폴리오가 있는지(포트폴리오 섹션 표시 판단용) */
+  hasPortfolioItems?: boolean;
 }
 
 /** 원본 → 섹션 데이터 */
@@ -275,30 +305,55 @@ export function parseProposal(raw: string, ctx: ParseContext = {}): ProposalSect
     .filter((p) => !/^(첫째|둘째|셋째|넷째|다섯째)/.test(p))
     .join('\n\n');
 
-  return assembleDoc({
-    greetingBody,
-    analysisLead: analysis.lead,
-    analysisBlocks: analysis.blocks,
-    estimate,
-    promiseBody,
-    commitments,
-    portfolioDesc,
-  });
+  return assembleDoc(
+    {
+      greetingBody,
+      analysisMarkdown: blocksToMarkdown(analysis.lead, analysis.blocks),
+      estimate,
+      promiseBody,
+      commitments,
+      portfolioDesc,
+    },
+    { hasPortfolioItems: ctx.hasPortfolioItems },
+  );
 }
 
 /** 원문에서 도출된 부분(결정론/AI 공통). 나머지 섹션은 assembleDoc이 기본값으로 채운다. */
 export interface DerivedParts {
   greetingBody: string;
-  analysisLead: string;
-  analysisBlocks: ContentBlock[];
+  analysisMarkdown: string;
   estimate: EstimateData;
   promiseBody: string;
   commitments: string[];
   portfolioDesc: string;
 }
 
+/** 문자열이 실질적으로 채워졌는지 */
+function has(v: string | undefined | null): boolean {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+/**
+ * AI 정제/파서 결과에 실제 내용이 있는 콘텐츠 섹션만 표시하는 적응형 레이아웃.
+ * - 표지(greeting)와 회사 소개용 고정 섹션(about·team·strategy·architecture·qa·timeline·warranty)은 항상 표시한다.
+ * - 원문에서 도출되는 analysis·estimate·portfolio·promise는 내용이 있을 때만 표시한다.
+ *   (편집 화면에서 사용자가 언제든 다시 켤 수 있으므로 기본값일 뿐 강제 아님)
+ */
+function adaptiveLayout(parts: DerivedParts, hasPortfolioItems: boolean): SectionLayoutItem[] {
+  const derived: Partial<Record<SectionId, boolean>> = {
+    analysis: has(parts.analysisMarkdown),
+    estimate: has(parts.estimate.cost) || has(parts.estimate.period) || has(parts.estimate.note),
+    portfolio: has(parts.portfolioDesc) || hasPortfolioItems,
+    promise: has(parts.promiseBody) || parts.commitments.some(has),
+  };
+  return SECTION_ORDER.map((id) => ({ id, visible: derived[id] ?? true }));
+}
+
 /** 도출된 부분 + 기본 시드 → 완전한 제안서 문서. 결정론 파서와 AI 구조화가 공유한다. */
-export function assembleDoc(parts: DerivedParts): ProposalSectionsData {
+export function assembleDoc(
+  parts: DerivedParts,
+  opts: { hasPortfolioItems?: boolean } = {},
+): ProposalSectionsData {
   const totalWeeks = parts.estimate.periodValue
     ? Math.max(5, Math.round(parts.estimate.periodValue / 7))
     : 9;
@@ -319,8 +374,7 @@ export function assembleDoc(parts: DerivedParts): ProposalSectionsData {
     },
     analysis: {
       title: DEFAULT_TITLES.analysis,
-      lead: parts.analysisLead,
-      blocks: parts.analysisBlocks,
+      content: parts.analysisMarkdown,
     },
     strategy: {
       title: DEFAULT_TITLES.strategy,
@@ -356,6 +410,6 @@ export function assembleDoc(parts: DerivedParts): ProposalSectionsData {
       body: parts.promiseBody,
       commitments: parts.commitments,
     },
-    layout: defaultLayout(),
+    layout: adaptiveLayout(parts, opts.hasPortfolioItems ?? false),
   };
 }
