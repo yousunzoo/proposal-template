@@ -17,7 +17,7 @@ export function ProposalView({
   const s = proposal.sections;
   if (!s) {
     return (
-      <div className="mx-auto max-w-[720px] px-5 py-24 text-center text-ink-500">
+      <div className="shell px-5 py-24 text-center text-ink-500">
         아직 생성되지 않은 제안서입니다.
       </div>
     );

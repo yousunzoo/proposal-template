@@ -13,9 +13,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const proposal = await getProposalBySlug(slug);
     return {
       title: proposal.title,
-      description: proposal.projectInfo.clientName
-        ? `${proposal.projectInfo.clientName} 제안서`
-        : '제안서',
+      description: proposal.title,
     };
   } catch {
     return { title: '제안서를 찾을 수 없습니다', robots: { index: false } };

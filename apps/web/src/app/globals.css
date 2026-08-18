@@ -70,6 +70,24 @@
     Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
   --radius-card: 0.625rem;
+
+  /* ── 콘텐츠 폭 (DESIGN §5) ──
+   * shell   : 콘텐츠 최대폭 1120px — 카드/그리드 포함 섹션 컨테이너
+   *  : 본문 리딩 폭 760px(≈720~860 밴드) — 장문 단일 컬럼 산문 */
+  --width-shell: 1120px;
+  --width-measure: 760px;
+}
+
+/* 콘텐츠 컨테이너: 가운데 정렬 + 리딩 최대폭 제한 (좌우 패딩은 호출부에서) */
+@utility shell {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--width-shell);
+}
+
+/* 장문 산문 리딩 폭 제한 (한 줄이 너무 길어지지 않도록) */
+@utility measure {
+  max-width: var(--width-measure);
 }
 
 html {

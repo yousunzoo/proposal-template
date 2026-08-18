@@ -6,7 +6,8 @@ import { portfolioLabel } from '@/lib/portfolio';
 import { Reveal } from '@/components/proposal/reveal';
 import { Eyebrow, Chip } from '@/components/ui';
 import { Check } from '@/shared/icons';
-import { ContentBlockView } from './blocks';
+import { Markdown } from '@/components/proposal/Markdown';
+import { GREETING_FIXED_INTRO } from '@/constants/greeting';
 import { cn } from '@/lib/cn';
 
 type Doc = ProposalSectionsData;
@@ -36,12 +37,12 @@ function SectionShell({
         tone === 'elevated' && 'bg-elevated',
       )}
     >
-      <div className="mx-auto w-full max-w-[1120px] px-5 lg:px-8">
+      <div className="shell px-5 lg:px-8">
         <Reveal>
           <Eyebrow index={index} label={label} />
         </Reveal>
         <Reveal delay={0.05}>
-          <h2 className="mt-4 max-w-[820px] text-[25px] font-bold leading-[1.22] tracking-[-0.02em] text-ink-900 lg:text-[33px]">
+          <h2 className="mt-4 text-[25px] font-bold leading-[1.22] tracking-[-0.02em] text-ink-900 lg:text-[33px]">
             {title || label}
           </h2>
         </Reveal>
@@ -86,25 +87,19 @@ export function HeroSection({
   info: ProjectInfo;
 }) {
   const paragraphs = toParagraphs(greeting.body ?? '');
-  const lead = paragraphs[0] ?? '';
-  const rest = paragraphs.slice(1);
   const meta: { k: string; v: string }[] = [];
-  if (info.clientName) meta.push({ k: '발주처', v: info.clientName });
-  if (info.categories) meta.push({ k: '분류', v: info.categories });
   if (info.budget) meta.push({ k: '예산', v: info.budget });
   if (info.duration) meta.push({ k: '기간', v: info.duration });
   return (
     <section id="greeting" aria-label="인사말" className="section-anchor scroll-mt-24">
-      <div className="mx-auto w-full max-w-[1120px] px-5 py-20 lg:px-8 lg:py-28">
-        <p className="text-[13px] font-medium tracking-[-0.01em] text-ink-500">제안서</p>
-        <h1 className="mt-4 max-w-[940px] text-[34px] font-bold leading-[1.12] tracking-[-0.03em] text-ink-900 lg:text-[54px]">
+      <div className="shell px-5 py-20 lg:px-8 lg:py-28">
+        <h1 className="mt-4 text-[34px] font-bold leading-[1.12] tracking-[-0.03em] text-ink-900 lg:text-[54px]">
           {title}
         </h1>
-        {lead && (
-          <p className="mt-6 max-w-[720px] text-[17px] leading-[1.7] text-ink-600 lg:text-xl">
-            {lead}
-          </p>
-        )}
+        {/* 고정 도입부 — 모든 제안서 공통(고정값) */}
+        <p className="mt-6 text-[17px] leading-[1.7] text-ink-600 lg:text-xl">
+          {GREETING_FIXED_INTRO}
+        </p>
         {meta.length > 0 && (
           <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4 border-t border-line pt-6">
             {meta.map((m) => (
@@ -115,9 +110,10 @@ export function HeroSection({
             ))}
           </dl>
         )}
-        {rest.length > 0 && (
-          <div className="mt-10 grid max-w-[940px] gap-x-12 gap-y-4 lg:grid-cols-2">
-            {rest.map((p, i) => (
+        {/* 동적 인사말 본문(원문/AI 도출) */}
+        {paragraphs.length > 0 && (
+          <div className="mt-10 grid gap-x-12 gap-y-4 lg:grid-cols-2">
+            {paragraphs.map((p, i) => (
               <p key={i} className="text-[15px] leading-[1.85] text-ink-600 lg:text-base">
                 {p}
               </p>
@@ -133,10 +129,10 @@ export function HeroSection({
 export function AboutSection({ about, index }: { about: Doc['about']; index: string }) {
   return (
     <SectionShell id="about" index={index} label="회사 소개" title={about.title}>
-      <div className="flex flex-col gap-4">
+      <div className=" flex flex-col gap-4">
         {about.intro.map((p, i) => (
           <Reveal key={i} delay={i * 0.04}>
-            <p className="max-w-[860px] text-[15px] leading-[1.85] tracking-[-0.3px] text-ink-600 lg:text-base">
+            <p className="text-[15px] leading-[1.85] tracking-[-0.3px] text-ink-600 lg:text-base">
               {p}
             </p>
           </Reveal>
@@ -167,7 +163,7 @@ export function TeamSection({ team, index }: { team: Doc['team']; index: string 
     <SectionShell id="team" index={index} label="팀 소개" title={team.title} tone="elevated">
       {team.intro && (
         <Reveal>
-          <p className="-mt-4 mb-10 max-w-[760px] text-[15px] leading-[1.7] text-ink-600 lg:text-base">
+          <p className=" -mt-4 mb-10 text-[15px] leading-[1.7] text-ink-600 lg:text-base">
             {team.intro}
           </p>
         </Reveal>
@@ -223,20 +219,7 @@ export function TeamSection({ team, index }: { team: Doc['team']; index: string 
 export function AnalysisSection({ analysis, index }: { analysis: Doc['analysis']; index: string }) {
   return (
     <SectionShell id="analysis" index={index} label="프로젝트 분석" title={analysis.title}>
-      {analysis.lead && (
-        <Reveal>
-          <p className="-mt-4 mb-10 max-w-[780px] text-lg leading-[1.7] tracking-[-0.3px] text-ink-700 lg:text-xl">
-            {analysis.lead}
-          </p>
-        </Reveal>
-      )}
-      {analysis.blocks.length > 0 && (
-        <div className="flex flex-col gap-5">
-          {analysis.blocks.map((block, i) => (
-            <ContentBlockView key={i} block={block} />
-          ))}
-        </div>
-      )}
+      <Markdown content={analysis.content} />
     </SectionShell>
   );
 }
@@ -294,7 +277,7 @@ export function EstimateSection({ estimate, index }: { estimate: Doc['estimate']
       </div>
       {estimate.note && (
         <Reveal delay={0.1}>
-          <p className="mt-6 rounded-xl border border-line bg-elevated px-5 py-4 text-[13px] leading-[1.7] text-ink-500">
+          <p className="mt-6 whitespace-pre-line rounded-xl border border-line bg-elevated px-5 py-4 text-[13px] leading-[1.7] text-ink-500">
             ※ {estimate.note}
           </p>
         </Reveal>
@@ -320,7 +303,7 @@ export function PortfolioSection({
   return (
     <SectionShell id="portfolio" index={index} label="관련 포트폴리오" title={portfolio.title} tone="elevated">
       {descParas.length > 0 && (
-        <div className="mb-12 flex max-w-[820px] flex-col gap-5">
+        <div className="mb-12 flex flex-col gap-5">
           {descParas.map((p, i) => {
             const head = p.match(/^\[(.+?)\]\s*([\s\S]*)$/);
             if (head) {
@@ -398,7 +381,7 @@ export function ArchitectureSection({
     <SectionShell id="architecture" index={index} label="시스템 아키텍처" title={architecture.title}>
       {architecture.note && (
         <Reveal>
-          <p className="-mt-4 mb-10 max-w-[780px] text-[15px] leading-[1.7] text-ink-600 lg:text-base">
+          <p className=" -mt-4 mb-10 text-[15px] leading-[1.7] text-ink-600 lg:text-base">
             {architecture.note}
           </p>
         </Reveal>
@@ -572,18 +555,18 @@ export function PromiseSection({ promise, index }: { promise: Doc['promise']; in
       aria-label="성공을 향한 약속"
       className="section-anchor scroll-mt-24 border-t border-line"
     >
-      <div className="mx-auto w-full max-w-[1120px] px-5 py-20 lg:px-8 lg:py-28">
+      <div className="shell px-5 py-20 lg:px-8 lg:py-28">
         <Reveal>
           <Eyebrow index={index} label="맺음말" />
         </Reveal>
         <Reveal delay={0.05}>
-          <h2 className="mt-4 max-w-[820px] text-[25px] font-bold leading-[1.22] tracking-[-0.02em] text-ink-900 lg:text-[33px]">
+          <h2 className="mt-4 text-[25px] font-bold leading-[1.22] tracking-[-0.02em] text-ink-900 lg:text-[33px]">
             {promise.title}
           </h2>
         </Reveal>
         {paragraphs.map((p, i) => (
           <Reveal key={i} delay={0.1 + i * 0.05}>
-            <p className="mt-5 max-w-[780px] text-[15px] leading-[1.85] text-ink-600 lg:text-[17px]">
+            <p className=" mt-5 text-[15px] leading-[1.85] text-ink-600 lg:text-[17px]">
               {p}
             </p>
           </Reveal>

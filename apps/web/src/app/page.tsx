@@ -19,8 +19,6 @@ import {
 export default function HomePage() {
   const router = useRouter();
   const [title, setTitle] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [categories, setCategories] = useState('');
   const [skills, setSkills] = useState('');
   const [budget, setBudget] = useState('');
   const [duration, setDuration] = useState('');
@@ -32,8 +30,6 @@ export default function HomePage() {
 
   function loadSample() {
     setTitle(SAMPLE_TITLE);
-    setClientName(SAMPLE_INFO.clientName);
-    setCategories(SAMPLE_INFO.categories);
     setSkills(SAMPLE_INFO.skills);
     setBudget(SAMPLE_INFO.budget);
     setDuration(SAMPLE_INFO.duration);
@@ -58,7 +54,7 @@ export default function HomePage() {
     try {
       const created = await api.create({
         title,
-        projectInfo: { clientName, categories, skills, budget, duration },
+        projectInfo: { skills, budget, duration },
         rawProposalContent,
         rawPortfolioContent,
         portfolioSlugs,
@@ -92,8 +88,8 @@ export default function HomePage() {
           <span className="text-blue-600">전문 제안서 페이지</span>를 생성합니다
         </h1>
         <p className="mt-4 text-[15px] leading-[1.7] text-ink-600 lg:text-base">
-          프로젝트 정보와 제안서 원본을 입력하면 템플릿 기반 제안서로 변환합니다. 생성 후 내용을
-          다듬고, 배포하면 고유 링크로 공개됩니다.
+          프로젝트 정보와 제안서 원본을 입력하면 AI가 구조를 잡고 어색한 문장을 다듬어 전문 제안서
+          페이지로 변환합니다. 생성 후 내용을 편집하고, 배포하면 고유 링크로 공개됩니다.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Button variant="secondary" size="sm" onClick={loadSample} type="button">
@@ -112,9 +108,7 @@ export default function HomePage() {
         {/* 프로젝트 정보 */}
         <section className="rounded-card border border-line bg-surface p-6 lg:p-7">
           <h2 className="text-[17px] font-bold text-ink-900">프로젝트 정보</h2>
-          <p className="mt-1 text-[13px] text-ink-500">
-            추후 admin API에서 자동으로 불러올 영역입니다.
-          </p>
+          
           <div className="mt-5 grid gap-4">
             <div>
               <Label htmlFor="title">제안서 제목 *</Label>
@@ -127,26 +121,6 @@ export default function HomePage() {
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="client">발주처</Label>
-                <TextInput
-                  id="client"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="예: 디지털 게임 코드 쇼핑몰"
-                  className="mt-1.5"
-                />
-              </div>
-              <div>
-                <Label htmlFor="categories">카테고리</Label>
-                <TextInput
-                  id="categories"
-                  value={categories}
-                  onChange={(e) => setCategories(e.target.value)}
-                  placeholder="예: 커머스 재구축"
-                  className="mt-1.5"
-                />
-              </div>
               <div>
                 <Label htmlFor="budget">예산</Label>
                 <TextInput
@@ -184,12 +158,10 @@ export default function HomePage() {
         {/* 제안서 원본 */}
         <section className="rounded-card border border-line bg-surface p-6 lg:p-7">
           <h2 className="text-[17px] font-bold text-ink-900">제안서 원본 *</h2>
-          <p className="mt-1 text-[13px] text-ink-500">
-            <code className="rounded bg-elevated px-1.5 py-0.5 text-blue-700">◼︎ 인사말</code> ·{' '}
-            <code className="rounded bg-elevated px-1.5 py-0.5 text-blue-700">◼︎ 프로젝트 분석</code>{' '}
-            · <code className="rounded bg-elevated px-1.5 py-0.5 text-blue-700">◼︎ 견적 요약</code> ·{' '}
-            <code className="rounded bg-elevated px-1.5 py-0.5 text-blue-700">◼︎ 성공을 향한 약속</code>{' '}
-            마커로 섹션을 구분합니다.
+          <p className="mt-1 text-[13px] leading-[1.6] text-ink-500">
+            형식에 상관없이 붙여넣으면 AI가 섹션으로 구조화하고 어색한 문장을 다듬습니다.{' '}
+            <code className="rounded bg-elevated px-1.5 py-0.5 text-blue-700">◼︎</code> 마커로 섹션
+            경계를 지정할 수도 있습니다 (선택).
           </p>
           <TextArea
             value={rawProposalContent}
@@ -202,8 +174,8 @@ export default function HomePage() {
         {/* 포트폴리오 */}
         <section className="rounded-card border border-line bg-surface p-6 lg:p-7">
           <h2 className="text-[17px] font-bold text-ink-900">관련 포트폴리오</h2>
-          <p className="mt-1 text-[13px] text-ink-500">
-            제안서에 노출할 포트폴리오를 선택합니다. 발행 페이지에서 클릭 시 상세로 이동합니다.
+          <p className="mt-1 text-[13px] leading-[1.6] text-ink-500">
+            제안서에 노출할 포트폴리오를 선택합니다. 선택하지 않으면 본문을 분석해 자동 추천합니다.
           </p>
           <TextArea
             value={rawPortfolioContent}
@@ -241,7 +213,7 @@ export default function HomePage() {
 
         <div className="flex items-center justify-end gap-3">
           <Button onClick={handleSubmit} disabled={submitting} type="button">
-            {submitting ? '생성 중…' : '제안서 생성'}
+            {submitting ? 'AI로 정제하는 중…' : '제안서 생성'}
           </Button>
         </div>
       </div>

@@ -56,8 +56,6 @@ export const SAMPLE_PORTFOLIO = `뱅크몰은 누적 사용자 800만 명 이상
 export const SAMPLE_TITLE = '디지털 게임 코드 쇼핑몰 재구축 제안서';
 
 export const SAMPLE_INFO = {
-  clientName: '디지털 게임 코드 쇼핑몰',
-  categories: '커머스 재구축',
   skills: 'Next.js, React, Spring Boot, PostgreSQL, AWS',
   budget: '150,000,000원',
   duration: '180일',
