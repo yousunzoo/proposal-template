@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, ExternalLink, PanelRight, Sparkles } from './icons';
+import { ArrowLeft, ExternalLink, PanelRight } from './icons';
 
 export type SaveStatus = 'idle' | 'changed' | 'saving' | 'saved' | 'error';
 
@@ -31,8 +30,6 @@ export function Toolbar({
   savedAt,
   showPreview,
   onTogglePreview,
-  onRegenerate,
-  regenerating,
   onPublish,
   publishing,
 }: {
@@ -41,27 +38,9 @@ export function Toolbar({
   savedAt: string | null;
   showPreview: boolean;
   onTogglePreview: () => void;
-  onRegenerate: () => void;
-  regenerating: boolean;
   onPublish: () => void;
   publishing: boolean;
 }) {
-  // AI 정제는 파괴적 → 2단계 확인
-  const [armed, setArmed] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-
-  const handleRegenerate = () => {
-    if (armed) {
-      setArmed(false);
-      if (timer.current) clearTimeout(timer.current);
-      onRegenerate();
-    } else {
-      setArmed(true);
-      timer.current = setTimeout(() => setArmed(false), 4000);
-    }
-  };
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/90 px-4 backdrop-blur-xl">
       <div className="flex items-center gap-3">
@@ -100,18 +79,6 @@ export function Toolbar({
             <ExternalLink width={15} height={15} />
           </Button>
         </Link>
-        <Button
-          variant={armed ? 'primary' : 'secondary'}
-          size="sm"
-          type="button"
-          onClick={handleRegenerate}
-          disabled={regenerating}
-          title="원문을 AI로 다시 구조화합니다. 현재 편집 내용은 초기화됩니다."
-          className={cn(armed && 'bg-amber-500 hover:bg-amber-600')}
-        >
-          <Sparkles width={15} height={15} />
-          {regenerating ? 'AI 정제 중…' : armed ? '정말? 편집 내용 초기화' : 'AI 정제'}
-        </Button>
         <Button size="sm" onClick={onPublish} disabled={publishing} type="button">
           {publishing ? '배포 중…' : '배포'}
         </Button>

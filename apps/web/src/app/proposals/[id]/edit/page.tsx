@@ -35,7 +35,6 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
   const [portfolioSlugs, setPortfolioSlugs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -136,23 +135,6 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [activeKey, showPreview]);
 
-  async function handleRegenerate() {
-    setRegenerating(true);
-    setError(null);
-    try {
-      const updated = await api.generate(id);
-      setProposal(updated);
-      setDoc(updated.sections ? assignKeys(normalizeDoc(updated.sections)) : null);
-      setSavedAt(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }));
-      setStatus('saved');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'AI 정제 실패');
-      setStatus('error');
-    } finally {
-      setRegenerating(false);
-    }
-  }
-
   async function handlePublish() {
     setPublishing(true);
     setError(null);
@@ -194,11 +176,11 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
     activeKey === 'project' ? '프로젝트 정보' : SECTION_LABELS[activeKey as SectionId] ?? activeKey;
 
   if (loading) {
-    return <div className="mx-auto max-w-[760px] px-5 py-24 text-center text-ink-500">불러오는 중…</div>;
+    return <div className="mx-auto px-5 py-24 text-center text-ink-500">불러오는 중…</div>;
   }
   if (!proposal || !doc) {
     return (
-      <div className="mx-auto max-w-[760px] px-5 py-24 text-center">
+      <div className="mx-auto px-5 py-24 text-center">
         <p className="text-ink-600">{error ?? '제안서를 찾을 수 없습니다.'}</p>
         <Link href="/" className="mt-4 inline-block text-blue-600">← 홈으로</Link>
       </div>
@@ -219,8 +201,6 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
           if (window.matchMedia('(min-width: 1024px)').matches) setShowPreview((v) => !v);
           else setMobilePreview(true);
         }}
-        onRegenerate={handleRegenerate}
-        regenerating={regenerating}
         onPublish={handlePublish}
         publishing={publishing}
       />
@@ -254,7 +234,7 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
 
         {/* ═══ 중앙: 편집 캔버스 ═══ */}
         <main className="min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[760px] px-5 py-6 sm:px-8">
+          <div className="mx-auto px-5 py-6 sm:px-8">
             {publishedUrl && (
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
                 <div>

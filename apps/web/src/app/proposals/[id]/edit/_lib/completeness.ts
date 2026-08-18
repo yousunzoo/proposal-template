@@ -18,7 +18,7 @@ export function isSectionFilled(doc: ProposalSectionsData, id: SectionId): boole
     case 'team':
       return has(doc.team.intro) || doc.team.groups.some((g) => g.members.length > 0);
     case 'analysis':
-      return has(doc.analysis.lead) || doc.analysis.blocks.length > 0;
+      return has(doc.analysis.content);
     case 'strategy':
       return doc.strategy.items.some((it) => has(it.title) || has(it.body));
     case 'estimate':
@@ -42,9 +42,8 @@ export function isSectionFilled(doc: ProposalSectionsData, id: SectionId): boole
 
 /** 프로젝트 정보(메타) 완성도 — 표지에 쓰이는 핵심 필드 기준 */
 export function isProjectInfoFilled(title: string, info: {
-  clientName?: string;
   budget?: string;
   duration?: string;
 }): boolean {
-  return has(title) && (has(info.clientName) || has(info.budget) || has(info.duration));
+  return has(title) && (has(info.budget) || has(info.duration));
 }

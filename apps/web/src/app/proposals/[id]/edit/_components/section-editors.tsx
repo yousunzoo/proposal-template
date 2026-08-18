@@ -1,10 +1,7 @@
 'use client';
 
-import type {
-  ContentBlock,
-  ProjectInfo,
-  ProposalSectionsData,
-} from '@proposal/shared';
+import { useRef } from 'react';
+import type { ProjectInfo, ProposalSectionsData } from '@proposal/shared';
 import { PROJECTS } from '@/entities/portfolio';
 import { portfolioLabelText } from '@/lib/portfolio';
 import { TextInput, TextArea } from '@/components/ui';
@@ -39,18 +36,6 @@ export function ProjectInfoEditor({
         <TextInput value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <Field label="발주처">
-          <TextInput
-            value={info.clientName ?? ''}
-            onChange={(e) => setInfo((v) => ({ ...v, clientName: e.target.value }))}
-          />
-        </Field>
-        <Field label="카테고리">
-          <TextInput
-            value={info.categories ?? ''}
-            onChange={(e) => setInfo((v) => ({ ...v, categories: e.target.value }))}
-          />
-        </Field>
         <Field label="예산">
           <TextInput
             value={info.budget ?? ''}
@@ -194,52 +179,75 @@ function TeamEditor({ doc, update }: EditorProps) {
   );
 }
 
-function AnalysisBlockEditor({ block, i, update }: { block: ContentBlock; i: number; update: Update }) {
-  if (block.kind === 'feature') {
-    return (
-      <>
-        <span className="text-[11px] font-semibold text-blue-600">기능 카드</span>
-        <TextInput
-          value={block.title}
-          onChange={(e) => update((d) => { const b = d.analysis.blocks[i]; if (b.kind === 'feature') b.title = e.target.value; })}
-          className="mt-1"
-          placeholder="제목"
-        />
-        <TextArea
-          value={block.body}
-          onChange={(e) => update((d) => { const b = d.analysis.blocks[i]; if (b.kind === 'feature') b.body = e.target.value; })}
-          className="mt-2 h-[80px]"
-          placeholder="설명"
-        />
-      </>
-    );
-  }
-  if (block.kind === 'paragraph') {
-    return (
-      <TextArea
-        value={block.text}
-        onChange={(e) => update((d) => { const b = d.analysis.blocks[i]; if (b.kind === 'paragraph') b.text = e.target.value; })}
-        className="h-[80px]"
-        placeholder="문단"
-      />
-    );
-  }
-  if (block.kind === 'heading') {
-    return (
-      <TextInput
-        value={block.text}
-        onChange={(e) => update((d) => { const b = d.analysis.blocks[i]; if (b.kind === 'heading') b.text = e.target.value; })}
-        placeholder="소제목"
-      />
-    );
-  }
+/** 마크다운 편집 필드 — textarea + 간단 서식 툴바(제목/소제목/목록/굵게). 결과는 라이브 프리뷰로 확인. */
+function MarkdownField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const applyLinePrefix = (prefix: string) => {
+    const ta = ref.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    onChange(value.slice(0, lineStart) + prefix + value.slice(lineStart));
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = start + prefix.length;
+    });
+  };
+
+  const wrapSelection = (wrap: string) => {
+    const ta = ref.current;
+    if (!ta) return;
+    const { selectionStart: start, selectionEnd: end } = ta;
+    const sel = value.slice(start, end) || '텍스트';
+    onChange(value.slice(0, start) + wrap + sel + wrap + value.slice(end));
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.selectionStart = start + wrap.length;
+      ta.selectionEnd = start + wrap.length + sel.length;
+    });
+  };
+
+  const tools: { label: string; fn: () => void }[] = [
+    { label: '제목', fn: () => applyLinePrefix('## ') },
+    { label: '소제목', fn: () => applyLinePrefix('### ') },
+    { label: '목록', fn: () => applyLinePrefix('- ') },
+    { label: '번호목록', fn: () => applyLinePrefix('1. ') },
+    { label: '인용', fn: () => applyLinePrefix('> ') },
+    { label: '굵게', fn: () => wrapSelection('**') },
+    { label: '기울임', fn: () => wrapSelection('*') },
+    { label: '구분선', fn: () => applyLinePrefix('\n---\n') },
+    { label: '다이어그램', fn: () => applyLinePrefix('\n```mermaid\nflowchart LR\n  A[시작] --> B[다음] --> C[완료]\n```\n') },
+  ];
+
   return (
-    <TextArea
-      value={block.items.join('\n')}
-      onChange={(e) => update((d) => { const b = d.analysis.blocks[i]; if (b.kind === 'list') b.items = e.target.value.split('\n').filter(Boolean); })}
-      className="h-[80px]"
-      placeholder="목록 (줄바꿈으로 구분)"
-    />
+    <div>
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {tools.map((t) => (
+          <button
+            key={t.label}
+            type="button"
+            onClick={t.fn}
+            className="rounded-md border border-line bg-surface px-2.5 py-1 text-[12px] font-medium text-ink-600 transition-colors hover:border-blue-500/50 hover:text-blue-700"
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <textarea
+        ref={ref}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={'## 소제목\n\n### 핵심 항목\n\n설명 문단...\n\n- 목록 항목'}
+        className="h-[440px] w-full resize-y rounded-lg border border-line bg-surface px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-ink-900 placeholder:text-ink-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+      />
+      <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-400">
+        마크다운: <code>## 제목</code> · <code>### 소제목</code> · <code>#### 소소제목</code> ·{' '}
+        <code>- 목록</code> · <code>1. 번호</code> · <code>&gt; 인용</code> · <code>**굵게**</code> ·{' '}
+        <code>*기울임*</code> · <code>`코드`</code> · <code>~~취소선~~</code> · <code>[링크](url)</code> ·{' '}
+        <code>---</code> 구분선 · <code>```mermaid</code> 플로우차트. 오른쪽 미리보기로 결과를 확인하세요.
+      </p>
+    </div>
   );
 }
 
@@ -247,25 +255,10 @@ function AnalysisEditor({ doc, update }: EditorProps) {
   return (
     <>
       <TitleField value={doc.analysis.title} onChange={(v) => update((d) => { d.analysis.title = v; })} />
-      <Field label="리드 문장" className="mt-4">
-        <TextArea
-          value={doc.analysis.lead}
-          onChange={(e) => update((d) => { d.analysis.lead = e.target.value; })}
-          className="h-[80px]"
-        />
-      </Field>
-      <Sub label="콘텐츠 블록">
-        <RepeatList
-          items={doc.analysis.blocks}
-          onChange={(n) => update((d) => { d.analysis.blocks = n; })}
-          factory={() => withKey({ kind: 'paragraph', text: '' }) as ContentBlock}
-          addLabel="문단 추가"
-          extraAdd={{
-            label: '기능 카드 추가',
-            factory: () => withKey({ kind: 'feature', index: '', title: '', body: '' }) as ContentBlock,
-          }}
-          emptyHint="분석 문단이나 기능 카드를 추가하세요."
-          render={(block, i) => <AnalysisBlockEditor block={block} i={i} update={update} />}
+      <Sub label="분석 내용 (마크다운)">
+        <MarkdownField
+          value={doc.analysis.content}
+          onChange={(v) => update((d) => { d.analysis.content = v; })}
         />
       </Sub>
     </>
