@@ -83,7 +83,7 @@ const DEFAULT_NAV: PortfolioNav = {
   listHref: '/portfolio',
   listLabel: '포트폴리오',
   itemBase: '/portfolio',
-  contactHref: '/contact',
+  contactHref: '/',
 };
 
 const focusRing =
@@ -129,7 +129,7 @@ export const PortfolioDetail = ({
     <main className="w-full flex-1">
       {/* ══════════════ 라이트 본문 밴드 (풀블리드) ══════════════ */}
       <div className="bg-elevated text-ink-900">
-        <div className="mx-auto w-full max-w-[1120px] px-5 py-12 lg:px-8 lg:py-20">
+        <div className="shell px-5 py-12 lg:px-8 lg:py-20">
           {/* ── 브레드크럼 ── */}
           <nav aria-label="브레드크럼">
             <ol className="flex flex-wrap items-center gap-1.5 text-sm tracking-[-0.28px] text-ink-500 lg:text-base">
@@ -249,7 +249,7 @@ export const PortfolioDetail = ({
       {/* ── CTA ── */}
       <section
         aria-labelledby="portfolio-cta-heading"
-        className="mx-auto w-full max-w-[1120px] px-5 py-20 lg:px-8 lg:py-28"
+        className="shell px-5 py-20 lg:px-8 lg:py-28"
       >
         <div className="border-t border-line pt-12 lg:pt-16">
           <p className="flex items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.22em] text-blue-600 lg:text-sm">
@@ -260,7 +260,7 @@ export const PortfolioDetail = ({
           <div className="mt-6 flex flex-col gap-10 lg:mt-8 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
             <h2
               id="portfolio-cta-heading"
-              className="max-w-[760px] text-[32px] font-semibold leading-[1.15] tracking-[-0.8px] text-ink-900 lg:text-[56px] lg:tracking-[-1.8px]"
+              className="text-[32px] font-semibold leading-[1.15] tracking-[-0.8px] text-ink-900 lg:text-[56px] lg:tracking-[-1.8px]"
             >
               이런 프로젝트,
               <br />
@@ -268,14 +268,14 @@ export const PortfolioDetail = ({
             </h2>
 
             <div className="flex shrink-0 flex-col gap-6 lg:items-end">
-              <p className="max-w-[380px] text-base leading-[1.7] tracking-[-0.32px] text-ink-600 lg:text-right">
+              <p className="text-base leading-[1.7] tracking-[-0.32px] text-ink-600 lg:text-right">
                 기획·디자인·개발까지, 처음부터 끝까지 함께합니다.
               </p>
               <Link
                 href={nav.contactHref}
                 className={`group inline-flex items-center gap-4 rounded-full text-lg font-semibold text-ink-900 transition-colors hover:text-blue-600 lg:text-xl ${focusRing}`}
               >
-                제안서 마지막 섹션 보기
+                제안서로 돌아가기
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white transition-colors duration-200 group-hover:bg-blue-500 lg:h-14 lg:w-14">
                   <ArrowRight width={22} height={22} aria-hidden="true" />
                 </span>
@@ -289,7 +289,7 @@ export const PortfolioDetail = ({
       {relatedProjects.length > 0 && (
         <section
           aria-labelledby="portfolio-related-heading"
-          className="mx-auto w-full max-w-[1120px] px-5 pb-16 lg:px-8 lg:pb-[120px]"
+          className="shell px-5 pb-16 lg:px-8 lg:pb-[120px]"
         >
           <div className="flex items-end justify-between gap-4">
             <h2
