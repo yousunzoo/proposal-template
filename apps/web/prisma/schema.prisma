@@ -30,3 +30,11 @@ model Proposal {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
+
+/// AI 구조화 프롬프트. 어드민에서 편집·저장하며, 행이 없으면 코드의 기본값으로 폴백한다.
+model Prompt {
+  /// 프롬프트 식별자 (예: "structure-system")
+  key       String   @id
+  content   String
+  updatedAt DateTime @updatedAt
+}
