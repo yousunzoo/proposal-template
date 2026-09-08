@@ -13,6 +13,8 @@ export type DomainFacet =
   | "마케팅·브랜드"
   | "지도·위치";
 
+export type PortfolioVisibility = "public-sample" | "internal-only" | "draft";
+
 export interface Project {
   slug: string;
   thumbnail: string;
@@ -26,4 +28,6 @@ export interface Project {
   platform: PlatformFacet[];
   /** 도메인 필터용 (다축 facet) */
   domain: DomainFacet[];
+  /** 외부 제안서에 노출 가능한지 판단하는 공개 상태 */
+  visibility: PortfolioVisibility;
 }

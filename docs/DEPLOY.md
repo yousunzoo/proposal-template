@@ -7,10 +7,13 @@
 Vercel (Root Directory = apps/web)
   └ Next.js
       · 공개 페이지  /p/[slug], /p/[slug]/portfolio/[...]
-      · 관리 페이지  /(대시보드), /proposals/[id]/edit, /preview   ← 미들웨어로 보호
-      · route handlers  /api/proposals/*  (관리=세션쿠키, 공개=/api/proposals/public/[slug])
+      · 작성 페이지  /(홈), /proposals/[id]/edit, /preview   ← 프로토타입: 인증 없음
+      · route handlers  /api/proposals/*  (공개=/api/proposals/public/[slug])
       └ Prisma ─▶ Neon Postgres
 ```
+
+> ⚠️ 이 프로토타입은 로그인/인증이 제거되어 있어 작성·발행 화면이 모두 공개된다.
+> 공개 배포 시 실제 데이터를 입력하지 말고, 실서비스 전환 시 인증 계층을 다시 추가할 것.
 
 ---
 
@@ -36,21 +39,15 @@ pnpm --filter web exec prisma db push
 
 ## 3. 시크릿 준비
 
-```bash
-openssl rand -hex 32   # AUTH_SECRET 용
-```
-
-- `ADMIN_PASSWORD`: 관리자 로그인 비밀번호(임의의 강한 값).
-- `AUTH_SECRET`: 세션 쿠키 서명 키(위 명령 결과).
 - `OPENAI_API_KEY`: (선택) 없으면 결정론 파서로 폴백.
+- 별도의 인증 시크릿은 필요 없다(프로토타입은 로그인 없이 동작).
 
 ## 4. 로컬 검증
 
 ```bash
 pnpm --filter web dev      # http://localhost:3000
 ```
-- `/`로 가면 `/login`으로 리다이렉트 → `ADMIN_PASSWORD`로 로그인.
-- 제안서 생성 → 편집 → 배포 → `/p/[slug]` 공개 링크 확인.
+- `/`(홈)에서 바로 제안서 생성 → 편집 → 배포 → `/p/[slug]` 공개 링크 확인.
 
 ## 5. Vercel 배포
 
@@ -68,18 +65,16 @@ pnpm --filter web dev      # http://localhost:3000
    | `DIRECT_URL` | Neon **direct** 연결 문자열 |
    | `OPENAI_API_KEY` | (선택) OpenAI 키 |
    | `OPENAI_MODEL` | (선택) 예: `gpt-5` |
-   | `ADMIN_PASSWORD` | 관리자 비밀번호 |
-   | `AUTH_SECRET` | 세션 서명 키 |
    | `WEB_ORIGIN` | (선택) 배포 도메인. 미설정 시 요청 origin 사용 |
 
-4. **Deploy**. 완료 후 `https://<앱>.vercel.app/` → `/login` → 정상 동작 확인.
+4. **Deploy**. 완료 후 `https://<앱>.vercel.app/` → 홈에서 제안서 생성 흐름 정상 동작 확인.
 5. (선택) `WEB_ORIGIN`을 최종 도메인으로 설정하면 발행 링크가 항상 그 도메인으로 고정된다.
 
 ## 6. 배포 후 체크
 
-- 공개: `/p/[slug]` 는 로그인 없이 열림.
-- 관리: `/`, `/proposals/*` 는 미인증 시 `/login` 리다이렉트.
-- API: `/api/proposals*`(공개 제외)는 세션 쿠키 없으면 401.
+- 공개: `/p/[slug]` 는 발행된 제안서가 열림.
+- 작성: `/`, `/proposals/*` 는 인증 없이 누구나 접근 가능(프로토타입).
+- API: `/api/proposals*` 는 모두 무인증으로 열려 있음.
 
 ## 트러블슈팅
 
@@ -89,6 +84,6 @@ pnpm --filter web dev      # http://localhost:3000
 
 ## 보안 리마인더
 
-- `ADMIN_PASSWORD`는 dev 기본값(`clickb-admin`)에서 반드시 변경.
-- `.env.local` / `apps/api/.env` 는 `.gitignore` 대상(커밋 금지).
-- 이전 대화에서 평문 노출된 **OpenAI 키는 로테이션** 권장.
+- 이 프로토타입은 인증이 없으므로 **공개 URL에 민감·실데이터를 입력하지 말 것**.
+- `.env.local` 은 `.gitignore` 대상(커밋 금지). API 키가 평문 노출된 적이 있다면 **로테이션** 권장.
+- 실서비스 전환 시 작성 계열 화면·API에 인증 계층을 반드시 다시 추가할 것.

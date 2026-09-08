@@ -6,12 +6,12 @@ import {
   SAMPLE_PORTFOLIO_SLUGS,
   SAMPLE_PROPOSAL,
   SAMPLE_TITLE,
-} from '../src/constants/sample';
+} from '../src/shared/config/sample';
 
 const prisma = new PrismaClient();
 
-/** 홈의 "발행 예시 보기 →" 링크(/p/sample-game-commerce)가 가리키는 공개 예시 제안서 */
-const SAMPLE_SLUG = 'sample-game-commerce';
+/** 홈의 "발행 예시 보기 →" 링크(/p/sample-culture-center)가 가리키는 공개 예시 제안서 */
+const SAMPLE_SLUG = 'sample-culture-center';
 
 async function main() {
   // 원본 → 섹션 데이터: 발행 흐름과 동일하게 결정론 파서 사용(AI 미의존)

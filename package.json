@@ -7,6 +7,8 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter shared build && pnpm --filter web build",
     "start": "pnpm --filter web start",
+    "sensitive:scan": "node scripts/sensitive-scan.mjs",
+    "fixtures:validate": "pnpm --filter shared build && pnpm --filter web validate:fixtures",
     "db:push": "pnpm --filter web db:push",
     "db:seed": "pnpm --filter web db:seed",
     "db:studio": "pnpm --filter web exec prisma studio"
