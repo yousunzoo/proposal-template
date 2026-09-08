@@ -3,8 +3,8 @@
 import type { ProposalDto } from '@proposal/shared';
 import { SECTION_LABELS } from '@proposal/shared';
 import { MotionRoot } from './reveal';
-import { SidebarNav, type NavItem } from './SidebarNav';
-import { ProposalBody, visibleNav } from './ProposalBody';
+import { SidebarNav, type NavItem } from './sidebar-nav';
+import { ProposalBody, visibleNav } from './proposal-body';
 
 /** 발행 제안서 전체 뷰 — 사이드바 스크롤 네비 + layout 기반 섹션 */
 export function ProposalView({

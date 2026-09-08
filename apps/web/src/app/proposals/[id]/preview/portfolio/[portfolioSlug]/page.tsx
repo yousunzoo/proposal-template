@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { getProject, relatedFor } from '@/lib/portfolio';
-import { PortfolioDetailScreen } from '@/widgets/portfolio-detail/PortfolioDetailScreen';
+import { getProject, relatedFor } from '@/shared/lib/portfolio';
+import { PortfolioDetailScreen } from '@/widgets/portfolio-detail/portfolio-detail-screen';
 import { getProposal } from '@/server/proposal/service';
 
 interface PageProps {

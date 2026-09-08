@@ -36,14 +36,14 @@ export function Mermaid({ chart }: { chart: string }) {
 
   if (failed) {
     return (
-      <pre className="overflow-x-auto rounded-lg border border-line bg-elevated p-4 font-mono text-[13px] leading-[1.6] text-ink-600">
+      <pre className="overflow-x-auto rounded-lg border border-line bg-elevated p-4 font-mono text-meta leading-[1.6] text-ink-600">
         <code>{chart}</code>
       </pre>
     );
   }
   if (!svg) {
     return (
-      <div className="rounded-xl border border-line bg-elevated/40 px-4 py-8 text-center text-[13px] text-ink-400">
+      <div className="rounded-xl border border-line bg-elevated/40 px-4 py-8 text-center text-meta text-ink-400">
         다이어그램 렌더링 중…
       </div>
     );

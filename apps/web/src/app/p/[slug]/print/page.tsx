@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ProposalPrintView } from '@/components/proposal/ProposalPrintView';
+import { ProposalPrintView } from '@/widgets/proposal/proposal-print-view';
 import { getProposalBySlug } from '@/server/proposal/service';
 
 interface PageProps {

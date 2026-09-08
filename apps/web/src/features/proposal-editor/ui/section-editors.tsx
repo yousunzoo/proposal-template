@@ -3,10 +3,10 @@
 import { useRef } from 'react';
 import type { ProjectInfo, ProposalSectionsData } from '@proposal/shared';
 import { PROJECTS } from '@/entities/portfolio';
-import { portfolioLabelText } from '@/lib/portfolio';
-import { TextInput, TextArea } from '@/components/ui';
-import { cn } from '@/lib/cn';
-import { withKey } from '../_lib/keys';
+import { portfolioLabelText } from '@/shared/lib/portfolio';
+import { TextInput, TextArea } from '@/shared/ui';
+import { cn } from '@/shared/lib/cn';
+import { withKey } from '../lib/keys';
 import { Field, Sub, TitleField, RepeatList, LineListField } from './fields';
 
 type Doc = ProposalSectionsData;
@@ -129,71 +129,6 @@ function AboutEditor({ doc, update }: EditorProps) {
   );
 }
 
-function TeamEditor({ doc, update }: EditorProps) {
-  return (
-    <>
-      <TitleField value={doc.team.title} onChange={(v) => update((d) => { d.team.title = v; })} />
-      <Field label="팀 소개 문장" className="mt-4">
-        <TextArea
-          value={doc.team.intro}
-          onChange={(e) => update((d) => { d.team.intro = e.target.value; })}
-          className="h-[70px]"
-        />
-      </Field>
-      <Sub label="팀 그룹">
-        <RepeatList
-          items={doc.team.groups}
-          onChange={(n) => update((d) => { d.team.groups = n; })}
-          factory={() => withKey({ dept: '새 그룹', members: [] })}
-          addLabel="그룹 추가"
-          emptyHint="부서/역할별 그룹을 추가하세요."
-          render={(_, gi) => (
-            <>
-              <TextInput
-                value={doc.team.groups[gi].dept}
-                onChange={(e) => update((d) => { d.team.groups[gi].dept = e.target.value; })}
-                placeholder="부서/역할"
-              />
-              <div className="mt-3 border-l-2 border-line pl-3">
-                <RepeatList
-                  items={doc.team.groups[gi].members}
-                  onChange={(n) => update((d) => { d.team.groups[gi].members = n; })}
-                  factory={() => withKey({ name: '', en: '' })}
-                  addLabel="팀원 추가"
-                  emptyHint="이 그룹의 팀원을 추가하세요."
-                  render={(_, mi) => (
-                    <div className="grid grid-cols-2 gap-2">
-                      <TextInput
-                        value={doc.team.groups[gi].members[mi].name}
-                        onChange={(e) => update((d) => { d.team.groups[gi].members[mi].name = e.target.value; })}
-                        placeholder="이름"
-                      />
-                      <TextInput
-                        value={doc.team.groups[gi].members[mi].en}
-                        onChange={(e) => update((d) => { d.team.groups[gi].members[mi].en = e.target.value; })}
-                        placeholder="EN (선택)"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-            </>
-          )}
-        />
-      </Sub>
-      <LineListField
-        label="요약 불릿"
-        hint="한 줄에 하나씩 입력하세요."
-        value={doc.team.bullets}
-        onCommit={(n) => update((d) => { d.team.bullets = n; })}
-        placeholder={'전원 정규직 전문 인력\n평균 경력 7년 이상'}
-        rows={4}
-        className="mt-6 border-t border-line pt-5"
-      />
-    </>
-  );
-}
-
 /** 마크다운 편집 필드 — textarea + 간단 서식 툴바(제목/소제목/목록/굵게). 결과는 라이브 프리뷰로 확인. */
 function MarkdownField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -243,7 +178,7 @@ function MarkdownField({ value, onChange }: { value: string; onChange: (v: strin
             key={t.label}
             type="button"
             onClick={t.fn}
-            className="rounded-md border border-line bg-surface px-2.5 py-1 text-[12px] font-medium text-ink-600 transition-colors hover:border-blue-500/50 hover:text-blue-700"
+            className="rounded-md border border-line bg-surface px-2.5 py-1 text-caption font-medium text-ink-600 transition-colors hover:border-blue-500/50 hover:text-blue-700"
           >
             {t.label}
           </button>
@@ -254,9 +189,9 @@ function MarkdownField({ value, onChange }: { value: string; onChange: (v: strin
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={'## 소제목\n\n### 핵심 항목\n\n설명 문단...\n\n- 목록 항목'}
-        className="h-[440px] w-full resize-y rounded-lg border border-line bg-surface px-3.5 py-3 font-mono text-[13px] leading-[1.7] text-ink-900 placeholder:text-ink-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        className="h-[440px] w-full resize-y rounded-lg border border-line bg-surface px-3.5 py-3 font-mono text-meta leading-[1.7] text-ink-900 placeholder:text-ink-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
       />
-      <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-400">
+      <p className="mt-1.5 text-caption leading-[1.6] text-ink-400">
         마크다운: <code>## 제목</code> · <code>### 소제목</code> · <code>#### 소소제목</code> ·{' '}
         <code>- 목록</code> · <code>1. 번호</code> · <code>&gt; 인용</code> · <code>**굵게**</code> ·{' '}
         <code>*기울임*</code> · <code>`코드`</code> · <code>~~취소선~~</code> · <code>[링크](url)</code> ·{' '}
@@ -358,7 +293,7 @@ function PortfolioEditor({
           value={doc.portfolio.description ?? ''}
           onChange={(e) => update((d) => { d.portfolio.description = e.target.value; })}
           className="h-[140px]"
-          placeholder="[중개·매칭 플랫폼 구축]&#10;누적 사용자 800만 명 이상…"
+          placeholder="[중개·매칭 플랫폼 구축]&#10;다수 사용자 조건 검색을 고려한 구조…"
         />
       </Field>
       <Sub label="포함할 포트폴리오">
@@ -491,7 +426,7 @@ function TimelineEditor({ doc, update }: EditorProps) {
                   placeholder="단계명"
                 />
                 <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[12px] text-ink-500">시작주</span>
+                  <span className="text-caption text-ink-500">시작주</span>
                   <TextInput
                     type="number"
                     min={1}
@@ -499,7 +434,7 @@ function TimelineEditor({ doc, update }: EditorProps) {
                     onChange={(e) => update((d) => { d.timeline.phases[i].start = Math.max(1, Number(e.target.value) || 1); setSpan(d); })}
                     className="w-20"
                   />
-                  <span className="text-[12px] text-ink-500">종료주</span>
+                  <span className="text-caption text-ink-500">종료주</span>
                   <TextInput
                     type="number"
                     min={1}
@@ -602,8 +537,6 @@ export function SectionEditor({
       return <GreetingEditor doc={doc} update={update} />;
     case 'about':
       return <AboutEditor doc={doc} update={update} />;
-    case 'team':
-      return <TeamEditor doc={doc} update={update} />;
     case 'analysis':
       return <AnalysisEditor doc={doc} update={update} />;
     case 'strategy':

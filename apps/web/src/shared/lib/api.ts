@@ -6,9 +6,8 @@ import type {
 } from '@proposal/shared';
 
 /**
- * 브라우저용 관리 API 클라이언트.
- * 모든 호출은 동일 출처 Next route handler(/api/proposals)로 나가며,
- * httpOnly 세션 쿠키로 인증된다(별도 토큰 없음).
+ * 브라우저용 제안서 API 클라이언트.
+ * 모든 호출은 동일 출처 Next route handler(/api/proposals)로 나간다(인증 없음).
  * 서버 컴포넌트(SSR)는 이 클라이언트 대신 @/server/proposal/service 를 직접 호출한다.
  */
 
@@ -20,13 +19,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     cache: 'no-store',
   });
-
-  // 세션 만료/미인증이면 로그인으로 유도
-  if (res.status === 401 && typeof window !== 'undefined') {
-    const next = encodeURIComponent(window.location.pathname + window.location.search);
-    window.location.href = `/login?next=${next}`;
-    throw new Error('인증이 필요합니다.');
-  }
 
   if (!res.ok) {
     let message = `요청 실패 (${res.status})`;

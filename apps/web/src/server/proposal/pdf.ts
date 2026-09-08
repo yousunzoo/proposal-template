@@ -92,7 +92,23 @@ async function resolveExecutablePath(): Promise<{ executablePath: string; args: 
   };
 }
 
-export async function renderProposalPdf(url: string): Promise<Buffer> {
+/** PDF 파일명으로 안전한 문자열 생성 (경로/제어 문자 제거) */
+export function safePdfFilename(title: string): string {
+  const base =
+    title
+      .replace(/[\\/:*?"<>|]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 80) || 'proposal';
+  return `${base}.pdf`;
+}
+
+interface RenderOptions {
+  /** 인증이 필요한 print 페이지(예: /proposals/[id]/print)를 헤드리스 브라우저로 열 때 전달할 쿠키 */
+  cookies?: { name: string; value: string }[];
+}
+
+export async function renderProposalPdf(url: string, options?: RenderOptions): Promise<Buffer> {
   const { executablePath, args } = await resolveExecutablePath();
   const browser = await playwrightChromium.launch({
     args,
@@ -101,10 +117,15 @@ export async function renderProposalPdf(url: string): Promise<Buffer> {
   });
 
   try {
-    const page = await browser.newPage({
+    const context = await browser.newContext({
       viewport: { width: PDF_WIDTH, height: PDF_HEIGHT },
       deviceScaleFactor: 1,
     });
+    if (options?.cookies?.length) {
+      const origin = new URL(url).origin;
+      await context.addCookies(options.cookies.map((c) => ({ ...c, url: origin })));
+    }
+    const page = await context.newPage();
     await page.goto(url, { waitUntil: 'networkidle', timeout: 45_000 });
     await page.emulateMedia({ media: 'print' });
     const pdf = await page.pdf({

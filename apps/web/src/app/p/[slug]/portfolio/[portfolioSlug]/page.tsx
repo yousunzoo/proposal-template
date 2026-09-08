@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PROJECTS } from '@/entities/portfolio';
-import { PortfolioDetailScreen } from '@/widgets/portfolio-detail/PortfolioDetailScreen';
-import { relatedFor } from '@/lib/portfolio';
+import { PortfolioDetailScreen } from '@/widgets/portfolio-detail/portfolio-detail-screen';
+import { relatedFor } from '@/shared/lib/portfolio';
 import { getProposalBySlug } from '@/server/proposal/service';
 
 interface PageProps {

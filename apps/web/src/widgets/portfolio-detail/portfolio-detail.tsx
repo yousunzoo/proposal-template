@@ -3,8 +3,8 @@ import Link from 'next/link';
 import type { ComponentType, ReactNode } from 'react';
 import type { ContentBlock } from '@proposal/shared';
 import type { Project } from '@/entities/portfolio';
-import { ContentBlockView } from '@/components/sections/blocks';
-import { ArrowRight, Calendar, Check, ChevronRight, Layers, PenTool } from '@/shared/icons';
+import { ContentBlockView } from '@/widgets/proposal/sections/blocks';
+import { ArrowRight, Calendar, Check, ChevronRight, Layers, PenTool } from '@/shared/ui/icons';
 
 /** category 문자열("WEB, Commerce, AI")을 개별 유형 토큰으로 파싱 */
 const parseTypes = (category: string) =>
@@ -163,12 +163,12 @@ export const PortfolioDetail = ({
 
           {/* ── 히어로 ── */}
           <header className="pt-6 lg:pt-10">
-            <h1 className="text-[28px] font-semibold leading-[1.2] tracking-[-0.6px] text-ink-900 lg:text-[52px] lg:tracking-[-1.3px]">
+            <h1 className="text-h2 font-semibold leading-[1.2] tracking-[-0.6px] text-ink-900 lg:text-hero lg:tracking-[-1.3px]">
               {project.title}
             </h1>
 
             {summary && (
-              <p className="mt-5 text-lg leading-[1.65] tracking-[-0.4px] text-ink-600 lg:mt-7 lg:text-[20px] lg:leading-[1.6]">
+              <p className="mt-5 text-lg leading-[1.65] tracking-[-0.4px] text-ink-600 lg:mt-7 lg:text-title lg:leading-[1.6]">
                 {summary}
               </p>
             )}
@@ -198,7 +198,7 @@ export const PortfolioDetail = ({
                 >
                   <div className="flex items-center gap-1.5 text-ink-500">
                     <Icon width={15} height={15} className="shrink-0" />
-                    <dt className="text-xs font-medium uppercase tracking-[0.12em] text-ink-500 lg:text-[13px]">
+                    <dt className="text-xs font-medium uppercase tracking-[0.12em] text-ink-500 lg:text-meta">
                       {label}
                     </dt>
                   </div>
@@ -216,7 +216,7 @@ export const PortfolioDetail = ({
               <SectionEyebrow index="01" label="Overview" />
               <h2
                 id="portfolio-overview-heading"
-                className="mt-4 text-2xl font-semibold leading-[1.3] tracking-[-0.6px] text-ink-900 lg:text-[32px] lg:tracking-[-0.96px]"
+                className="mt-4 text-2xl font-semibold leading-[1.3] tracking-[-0.6px] text-ink-900 lg:text-h1 lg:tracking-[-0.96px]"
               >
                 프로젝트 소개
               </h2>
@@ -233,11 +233,11 @@ export const PortfolioDetail = ({
             <SectionEyebrow index={bodyBlocks.length > 0 ? '02' : '01'} label="Showcase" />
             <h2
               id="portfolio-screens-heading"
-              className="mt-4 text-2xl font-semibold leading-[1.3] tracking-[-0.6px] text-ink-900 lg:text-[32px] lg:tracking-[-0.96px]"
+              className="mt-4 text-2xl font-semibold leading-[1.3] tracking-[-0.6px] text-ink-900 lg:text-h1 lg:tracking-[-0.96px]"
             >
               프로젝트 화면
             </h2>
-            <div className="mt-8 flex flex-col items-center justify-center overflow-hidden rounded-[10px] ring-1 ring-line lg:mt-10">
+            <div className="mt-8 flex flex-col items-center justify-center overflow-hidden rounded-card ring-1 ring-line lg:mt-10">
               {detailContent}
             </div>
           </section>
@@ -260,7 +260,7 @@ export const PortfolioDetail = ({
           <div className="mt-6 flex flex-col gap-10 lg:mt-8 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
             <h2
               id="portfolio-cta-heading"
-              className="text-[32px] font-semibold leading-[1.15] tracking-[-0.8px] text-ink-900 lg:text-[56px] lg:tracking-[-1.8px]"
+              className="text-h1 font-semibold leading-[1.15] tracking-[-0.8px] text-ink-900 lg:text-hero lg:tracking-[-1.8px]"
             >
               이런 프로젝트,
               <br />
@@ -294,7 +294,7 @@ export const PortfolioDetail = ({
           <div className="flex items-end justify-between gap-4">
             <h2
               id="portfolio-related-heading"
-              className="text-2xl font-semibold leading-[1.3] tracking-[-0.6px] text-ink-900 lg:text-[32px] lg:tracking-[-0.96px]"
+              className="text-2xl font-semibold leading-[1.3] tracking-[-0.6px] text-ink-900 lg:text-h1 lg:tracking-[-0.96px]"
             >
               다른 프로젝트
             </h2>
@@ -312,9 +312,9 @@ export const PortfolioDetail = ({
               <li key={slug}>
                 <Link
                   href={`${nav.itemBase}/${slug}`}
-                  className={`group flex h-full flex-col rounded-[10px] ${focusRing}`}
+                  className={`group flex h-full flex-col rounded-card ${focusRing}`}
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-[10px] ring-1 ring-line transition-shadow duration-300 group-hover:shadow-[0_10px_28px_-16px_rgba(15,23,42,0.24)]">
+                  <div className="relative aspect-square overflow-hidden rounded-card ring-1 ring-line transition-shadow duration-300 group-hover:shadow-[0_10px_28px_-16px_rgba(15,23,42,0.24)]">
                     <Image
                       src={thumbnail}
                       alt={`${title} 프로젝트 썸네일`}

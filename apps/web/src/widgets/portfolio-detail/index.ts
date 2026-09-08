@@ -1,1 +1,1 @@
-export { PortfolioDetail, type PortfolioNav } from './PortfolioDetail';
+export { PortfolioDetail, type PortfolioNav } from './portfolio-detail';

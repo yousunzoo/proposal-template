@@ -15,8 +15,6 @@ export function isSectionFilled(doc: ProposalSectionsData, id: SectionId): boole
       return has(doc.greeting.title) || has(doc.greeting.intro) || has(doc.greeting.body);
     case 'about':
       return doc.about.intro.some(has) || doc.about.values.some((v) => has(v.title) || has(v.body));
-    case 'team':
-      return has(doc.team.intro) || doc.team.groups.some((g) => g.members.length > 0);
     case 'analysis':
       return has(doc.analysis.content);
     case 'strategy':

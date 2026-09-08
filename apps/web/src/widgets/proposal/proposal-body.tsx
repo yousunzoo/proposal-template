@@ -3,7 +3,6 @@ import { SECTION_ORDER } from '@proposal/shared';
 import {
   HeroSection,
   AboutSection,
-  TeamSection,
   AnalysisSection,
   StrategySection,
   EstimateSection,
@@ -13,7 +12,7 @@ import {
   TimelineSection,
   WarrantySection,
   PromiseSection,
-} from '@/components/sections';
+} from '@/widgets/proposal/sections';
 
 /** layout(순서·표시)을 존중해 섹션을 렌더한다. 사이드바 없이 본문만. */
 export function ProposalBody({
@@ -48,8 +47,6 @@ export function ProposalBody({
         return <HeroSection key={id} title={title} greeting={doc.greeting} info={info} />;
       case 'about':
         return <AboutSection key={id} about={doc.about} index={idx(id)} />;
-      case 'team':
-        return <TeamSection key={id} team={doc.team} index={idx(id)} />;
       case 'analysis':
         return <AnalysisSection key={id} analysis={doc.analysis} index={idx(id)} />;
       case 'strategy':

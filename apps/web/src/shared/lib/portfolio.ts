@@ -5,9 +5,9 @@ export function getProject(slug: string): Project | undefined {
 }
 
 /**
- * 포트폴리오 title("뱅크몰 | 대출 비교 플랫폼")을 이름 + 설명으로 분리한다.
- * 첫 조각만 쓰면 "뱅크몰"(비교·상담사·관리자) 처럼 서로 다른 프로젝트가
- * 동일 라벨로 겹쳐 구분되지 않으므로, 설명 조각까지 함께 노출해야 한다.
+ * 포트폴리오 title("도메인 | 유형")을 이름 + 설명으로 분리한다.
+ * 첫 조각만 쓰면 서로 다른 프로젝트가 동일 라벨로 겹쳐 구분되지 않으므로,
+ * 설명 조각까지 함께 노출해야 한다.
  */
 export function portfolioLabel(title: string): { name: string; descriptor: string } {
   const parts = title

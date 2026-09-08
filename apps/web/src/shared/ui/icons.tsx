@@ -2,7 +2,7 @@ import type { SVGProps } from 'react';
 
 /**
  * 포트폴리오 상세에서 사용하는 아이콘 세트 (lucide 스타일, 로컬 정의).
- * clickb 전체 아이콘 라이브러리를 포팅하지 않고 필요한 6개만 유지한다.
+ * 전체 아이콘 라이브러리를 포팅하지 않고 필요한 아이콘만 유지한다.
  */
 
 type IconProps = SVGProps<SVGSVGElement> & { width?: number; height?: number };

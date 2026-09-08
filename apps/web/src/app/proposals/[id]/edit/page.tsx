@@ -9,15 +9,22 @@ import type {
   SectionId,
 } from '@proposal/shared';
 import { SECTION_LABELS, SECTION_ORDER, normalizeDoc } from '@proposal/shared';
-import { api } from '@/lib/api';
-import { Button } from '@/components/ui';
-import { ProposalBody } from '@/components/proposal/ProposalBody';
-import { cn } from '@/lib/cn';
-import { assignKeys, stripKeys } from './_lib/keys';
-import { Toolbar, type SaveStatus } from './_components/Toolbar';
-import { SectionRail } from './_components/SectionRail';
-import { SectionEditor, ProjectInfoEditor } from './_components/section-editors';
-import { Eye, EyeOff, ExternalLink } from './_components/icons';
+import { api } from '@/shared/lib/api';
+import { Button } from '@/shared/ui';
+import { ProposalBody } from '@/widgets/proposal/proposal-body';
+import { cn } from '@/shared/lib/cn';
+import {
+  assignKeys,
+  stripKeys,
+  Toolbar,
+  type SaveStatus,
+  SectionRail,
+  SectionEditor,
+  ProjectInfoEditor,
+  Eye,
+  EyeOff,
+  ExternalLink,
+} from '@/features/proposal-editor';
 
 type Doc = ProposalSectionsData;
 
@@ -197,6 +204,7 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
     <div className="flex h-screen flex-col bg-elevated">
       <Toolbar
         id={id}
+        title={title}
         status={status}
         savedAt={savedAt}
         showPreview={showPreview}
@@ -242,7 +250,7 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
             {publishedUrl && (
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
                 <div>
-                  <p className="text-[13px] font-semibold text-blue-700">발행 완료</p>
+                  <p className="text-meta font-semibold text-blue-700">발행 완료</p>
                   <a href={publishedUrl} target="_blank" className="text-sm text-blue-600 underline">
                     {publishedUrl}
                   </a>
@@ -261,9 +269,9 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
             {/* 섹션 헤더 */}
             <div className="mb-5 flex items-center justify-between gap-3 border-b border-line pb-4">
               <div className="flex items-center gap-2.5">
-                <h1 className="text-[22px] font-bold tracking-[-0.01em] text-ink-900">{activeLabel}</h1>
+                <h1 className="text-title tracking-[-0.01em] text-ink-900">{activeLabel}</h1>
                 {activeVisible === false && (
-                  <span className="rounded-full bg-elevated px-2 py-0.5 text-[11px] font-medium text-ink-500">
+                  <span className="rounded-full bg-elevated px-2 py-0.5 text-eyebrow font-medium text-ink-500">
                     숨김 상태
                   </span>
                 )}
@@ -310,13 +318,13 @@ export default function EditProposalPage({ params }: { params: Promise<{ id: str
         {showPreview && (
           <aside className="hidden w-[44%] shrink-0 border-l border-line bg-canvas lg:block">
             <div className="flex h-9 items-center justify-between border-b border-line bg-surface px-4">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-400">
+              <span className="text-eyebrow font-semibold uppercase tracking-[0.14em] text-ink-400">
                 라이브 미리보기
               </span>
               <Link
                 href={`/proposals/${id}/preview`}
                 target="_blank"
-                className="flex items-center gap-1 text-[11px] text-ink-500 hover:text-blue-700"
+                className="flex items-center gap-1 text-eyebrow text-ink-500 hover:text-blue-700"
               >
                 <ExternalLink width={13} height={13} /> 새 탭
               </Link>
@@ -366,7 +374,7 @@ function MobileChip({
       type="button"
       onClick={onClick}
       className={cn(
-        'shrink-0 rounded-full border px-3 py-1 text-[12px] font-medium transition-colors',
+        'shrink-0 rounded-full border px-3 py-1 text-caption font-medium transition-colors',
         active
           ? 'border-blue-300 bg-blue-50 text-blue-700'
           : 'border-line bg-surface text-ink-500 hover:text-ink-900',

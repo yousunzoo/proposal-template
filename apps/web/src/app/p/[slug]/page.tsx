@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getProposalBySlug } from '@/server/proposal/service';
-import { ProposalView } from '@/components/proposal/ProposalView';
+import { ProposalView } from '@/widgets/proposal/proposal-view';
 
 interface PageProps {
   params: Promise<{ slug: string }>;

@@ -1,5 +1,5 @@
 import type { ProposalDto } from '@proposal/shared';
-import { ProposalBody } from './ProposalBody';
+import { ProposalBody } from './proposal-body';
 
 /** PDF 전용 제안서 뷰. 화면 네비게이션을 제거하고 섹션 본문만 렌더한다. */
 export function ProposalPrintView({

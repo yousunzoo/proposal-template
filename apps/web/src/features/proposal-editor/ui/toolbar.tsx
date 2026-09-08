@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from '@/components/ui';
-import { cn } from '@/lib/cn';
+import { Button } from '@/shared/ui';
+import { usePdfDownload } from '@/widgets/proposal/usePdfDownload';
+import { cn } from '@/shared/lib/cn';
+import { Download } from '@/shared/ui/icons';
 import { ArrowLeft, ExternalLink, PanelRight } from './icons';
 
 export type SaveStatus = 'idle' | 'changed' | 'saving' | 'saved' | 'error';
@@ -26,6 +28,7 @@ function StatusPill({ status, savedAt }: { status: SaveStatus; savedAt: string |
 
 export function Toolbar({
   id,
+  title,
   status,
   savedAt,
   showPreview,
@@ -34,6 +37,7 @@ export function Toolbar({
   publishing,
 }: {
   id: string;
+  title: string;
   status: SaveStatus;
   savedAt: string | null;
   showPreview: boolean;
@@ -41,6 +45,11 @@ export function Toolbar({
   onPublish: () => void;
   publishing: boolean;
 }) {
+  const { download: downloadPdf, isDownloading, error: pdfError } = usePdfDownload(
+    `/api/proposals/${id}/pdf`,
+    title || '제안서',
+  );
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/90 px-4 backdrop-blur-xl">
       <div className="flex items-center gap-3">
@@ -79,6 +88,17 @@ export function Toolbar({
             <ExternalLink width={15} height={15} />
           </Button>
         </Link>
+        <Button
+          variant="secondary"
+          size="sm"
+          type="button"
+          onClick={downloadPdf}
+          disabled={isDownloading}
+          title={pdfError || 'PDF로 내려받기 (섹션별 1페이지 슬라이드)'}
+        >
+          <Download width={15} height={15} />
+          <span className="hidden sm:inline">{isDownloading ? 'PDF 생성 중…' : 'PDF'}</span>
+        </Button>
         <Button size="sm" onClick={onPublish} disabled={publishing} type="button">
           {publishing ? '배포 중…' : '배포'}
         </Button>

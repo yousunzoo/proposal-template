@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
-import { Reveal } from '@/components/proposal/reveal';
-import { Mermaid } from '@/components/proposal/Mermaid';
-import { Check } from '@/shared/icons';
+import { Reveal } from '@/widgets/proposal/reveal';
+import { Mermaid } from '@/widgets/proposal/mermaid';
+import { Check } from '@/shared/ui/icons';
 
 /**
  * 제안서용 경량 마크다운 렌더러 (무의존).
@@ -182,7 +182,7 @@ function Heading({ level, text }: { level: number; text: string }) {
     return (
       <Reveal className="mt-7 flex items-center gap-2 first:mt-0">
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" aria-hidden />
-        <h4 className="text-[15px] font-semibold tracking-[-0.2px] text-blue-800 lg:text-[17px]">
+        <h4 className="text-body font-semibold tracking-[-0.2px] text-blue-800 lg:text-lead">
           {renderInline(text)}
         </h4>
       </Reveal>
@@ -191,7 +191,7 @@ function Heading({ level, text }: { level: number; text: string }) {
   // #### 이하 → 소소제목: 작은 회색 라벨(대문자 트래킹)
   return (
     <Reveal className="mt-5 first:mt-0">
-      <h5 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-500">
+      <h5 className="text-caption font-semibold uppercase tracking-[0.1em] text-ink-500">
         {renderInline(text)}
       </h5>
     </Reveal>
@@ -226,7 +226,7 @@ export function Markdown({ content }: { content: string }) {
         if (b.type === 'code') {
           return (
             <Reveal key={i}>
-              <pre className="overflow-x-auto rounded-lg border border-line bg-elevated p-4 font-mono text-[13px] leading-[1.6] text-ink-700">
+              <pre className="overflow-x-auto rounded-lg border border-line bg-elevated p-4 font-mono text-meta leading-[1.6] text-ink-700">
                 <code>{b.code}</code>
               </pre>
             </Reveal>
@@ -236,7 +236,7 @@ export function Markdown({ content }: { content: string }) {
         if (b.type === 'quote') {
           return (
             <Reveal key={i}>
-              <blockquote className="border-l-[3px] border-blue-300 bg-blue-50/50 py-3 pl-4 pr-3 text-[15px] italic leading-[1.75] text-ink-600 lg:text-base">
+              <blockquote className="border-l-[3px] border-blue-300 bg-blue-50/50 py-3 pl-4 pr-3 text-body italic leading-[1.75] text-ink-600 lg:text-base">
                 {b.lines.map((ln, k) => (
                   <p key={k} className={k > 0 ? 'mt-2' : undefined}>
                     {renderInline(ln)}
@@ -254,7 +254,7 @@ export function Markdown({ content }: { content: string }) {
                 {b.items.map((it, k) => (
                   <li
                     key={k}
-                    className="flex items-start gap-2.5 text-[15px] leading-[1.6] tracking-[-0.3px] text-ink-700 lg:text-base"
+                    className="flex items-start gap-2.5 text-body leading-[1.6] tracking-[-0.3px] text-ink-700 lg:text-base"
                   >
                     <Check width={18} height={18} aria-hidden className="mt-0.5 shrink-0 text-blue-600" />
                     <span>{renderInline(it)}</span>
@@ -272,9 +272,9 @@ export function Markdown({ content }: { content: string }) {
                 {b.items.map((it, k) => (
                   <li
                     key={k}
-                    className="flex items-start gap-3 text-[15px] leading-[1.6] tracking-[-0.3px] text-ink-700 lg:text-base"
+                    className="flex items-start gap-3 text-body leading-[1.6] tracking-[-0.3px] text-ink-700 lg:text-base"
                   >
-                    <span className="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold tabular-nums text-blue-600">
+                    <span className="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-eyebrow font-bold tabular-nums text-blue-600">
                       {k + 1}
                     </span>
                     <span>{renderInline(it)}</span>

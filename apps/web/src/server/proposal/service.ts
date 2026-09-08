@@ -1,4 +1,5 @@
 import type { Proposal } from '@prisma/client';
+import { randomBytes } from 'node:crypto';
 import type {
   CreateProposalInput,
   ProjectInfo,
@@ -7,12 +8,18 @@ import type {
   PublishResult,
   UpdateProposalInput,
 } from '@proposal/shared';
-import { normalizeDoc } from '@proposal/shared';
+import {
+  normalizeDoc,
+  ProposalValidationError,
+  validateCreateProposalInput,
+  validateProposalSectionsData,
+  validateUpdateProposalInput,
+} from '@proposal/shared';
 import { prisma } from '../db';
 import { HttpError } from '../http';
 import { parseProposal, assembleDoc, parseAmount, parsePeriodDays } from './parser';
 import { structure } from './ai-structure';
-import { suggestPortfolioSlugs } from '@/lib/portfolio';
+import { suggestPortfolioSlugs } from '@/shared/lib/portfolio';
 
 /** DB row(JSON 문자열 컬럼) → DTO 변환 */
 function toDto(p: Proposal): ProposalDto {
@@ -42,6 +49,37 @@ function safeJson<T>(value: string | null, fallback: T): T {
   }
 }
 
+function rethrowValidation(e: unknown): never {
+  if (e instanceof ProposalValidationError) {
+    throw new HttpError(400, e.issues.join('\n'));
+  }
+  throw e;
+}
+
+function parseCreateInput(input: unknown): CreateProposalInput {
+  try {
+    return validateCreateProposalInput(input);
+  } catch (e) {
+    rethrowValidation(e);
+  }
+}
+
+function parseUpdateInput(input: unknown): UpdateProposalInput {
+  try {
+    return validateUpdateProposalInput(input);
+  } catch (e) {
+    rethrowValidation(e);
+  }
+}
+
+function assertSections(sections: ProposalSectionsData): ProposalSectionsData {
+  try {
+    return validateProposalSectionsData(sections);
+  } catch (e) {
+    rethrowValidation(e);
+  }
+}
+
 /** 한글 제목 → URL slug (한글은 제거되므로 랜덤 접미사로 유일성 보장) */
 function slugify(title: string): string {
   const base = title
@@ -51,21 +89,20 @@ function slugify(title: string): string {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 40);
-  const suffix = Math.random().toString(36).slice(2, 8);
+  const suffix = randomBytes(4).toString('hex');
   return base ? `${base}-${suffix}` : `proposal-${suffix}`;
 }
 
-export async function createProposal(input: CreateProposalInput): Promise<ProposalDto> {
-  if (!input?.title?.trim()) throw new HttpError(400, 'title은 필수입니다.');
-  if (!input?.rawProposalContent?.trim()) throw new HttpError(400, 'rawProposalContent는 필수입니다.');
+export async function createProposal(input: unknown): Promise<ProposalDto> {
+  const parsed = parseCreateInput(input);
 
   const created = await prisma.proposal.create({
     data: {
-      title: input.title.trim(),
-      projectInfo: JSON.stringify(input.projectInfo ?? {}),
-      rawProposalContent: input.rawProposalContent,
-      rawPortfolioContent: input.rawPortfolioContent ?? '',
-      portfolioSlugs: JSON.stringify(input.portfolioSlugs ?? []),
+      title: parsed.title,
+      projectInfo: JSON.stringify(parsed.projectInfo ?? {}),
+      rawProposalContent: parsed.rawProposalContent,
+      rawPortfolioContent: parsed.rawPortfolioContent ?? '',
+      portfolioSlugs: JSON.stringify(parsed.portfolioSlugs ?? []),
     },
   });
   return toDto(created);
@@ -125,6 +162,7 @@ export async function generateProposal(id: string): Promise<ProposalDto> {
   if (!sections.greeting.title.trim()) {
     sections.greeting.title = p.title;
   }
+  sections = assertSections(sections);
 
   const updated = await prisma.proposal.update({
     where: { id },
@@ -138,15 +176,16 @@ export async function generateProposal(id: string): Promise<ProposalDto> {
 }
 
 /** 섹션/제목/포트폴리오 편집 저장 */
-export async function updateProposal(id: string, input: UpdateProposalInput): Promise<ProposalDto> {
+export async function updateProposal(id: string, input: unknown): Promise<ProposalDto> {
   const p = await prisma.proposal.findUnique({ where: { id } });
   if (!p) throw new HttpError(404, '제안서를 찾을 수 없습니다.');
+  const parsed = parseUpdateInput(input);
 
   const data: Record<string, unknown> = {};
-  if (input.title !== undefined) data.title = input.title;
-  if (input.projectInfo !== undefined) data.projectInfo = JSON.stringify(input.projectInfo);
-  if (input.sections !== undefined) data.sections = JSON.stringify(input.sections);
-  if (input.portfolioSlugs !== undefined) data.portfolioSlugs = JSON.stringify(input.portfolioSlugs);
+  if (parsed.title !== undefined) data.title = parsed.title;
+  if (parsed.projectInfo !== undefined) data.projectInfo = JSON.stringify(parsed.projectInfo);
+  if (parsed.sections !== undefined) data.sections = JSON.stringify(parsed.sections);
+  if (parsed.portfolioSlugs !== undefined) data.portfolioSlugs = JSON.stringify(parsed.portfolioSlugs);
 
   const updated = await prisma.proposal.update({ where: { id }, data });
   return toDto(updated);

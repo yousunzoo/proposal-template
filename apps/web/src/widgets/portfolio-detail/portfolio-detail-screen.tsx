@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import type { Project } from '@/entities/portfolio';
-import { PortfolioDetail, type PortfolioNav } from './PortfolioDetail';
+import { PortfolioDetail, type PortfolioNav } from './portfolio-detail';
 
 /** 포트폴리오 상세 전체 화면 (공개/미리보기 라우트 공용) */
 export function PortfolioDetailScreen({

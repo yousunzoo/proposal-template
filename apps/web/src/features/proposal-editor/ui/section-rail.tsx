@@ -3,8 +3,8 @@
 import type { ProjectInfo, ProposalSectionsData, SectionId } from '@proposal/shared';
 import { SECTION_LABELS, SECTION_ORDER } from '@proposal/shared';
 import { Reorder, useDragControls } from 'framer-motion';
-import { cn } from '@/lib/cn';
-import { isSectionFilled, isProjectInfoFilled } from '../_lib/completeness';
+import { cn } from '@/shared/lib/cn';
+import { isSectionFilled, isProjectInfoFilled } from '../lib/completeness';
 import { Grip, Eye, EyeOff } from './icons';
 
 type Doc = ProposalSectionsData;
@@ -37,7 +37,7 @@ function PinnedRow({
       type="button"
       onClick={onSelect}
       className={cn(
-        'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors',
+        'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-meta transition-colors',
         active ? 'bg-blue-50 font-semibold text-blue-700' : 'text-ink-700 hover:bg-elevated',
       )}
     >
@@ -91,7 +91,7 @@ function SectionRow({
         <Dot filled={filled && visible} />
         <span
           className={cn(
-            'flex-1 truncate text-[13px]',
+            'flex-1 truncate text-meta',
             active ? 'font-semibold text-blue-700' : visible ? 'text-ink-700' : 'text-ink-400 line-through',
           )}
         >
@@ -149,8 +149,8 @@ export function SectionRail({
   return (
     <nav className="flex h-full flex-col">
       <div className="flex items-center justify-between px-3 pb-2 pt-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-400">섹션</span>
-        <span className="text-[11px] text-ink-400">{visibleCount}/{layout.length} 표시</span>
+        <span className="text-eyebrow font-semibold uppercase tracking-[0.14em] text-ink-400">섹션</span>
+        <span className="text-eyebrow text-ink-400">{visibleCount}/{layout.length} 표시</span>
       </div>
 
       <div className="px-2">

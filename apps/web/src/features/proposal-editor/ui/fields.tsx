@@ -2,9 +2,9 @@
 
 import { type ReactNode, useEffect, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
-import { cn } from '@/lib/cn';
-import { Label, TextInput, TextArea } from '@/components/ui';
-import { keyOf } from '../_lib/keys';
+import { cn } from '@/shared/lib/cn';
+import { Label, TextInput, TextArea } from '@/shared/ui';
+import { keyOf } from '../lib/keys';
 import { Grip, Plus, Trash, Copy } from './icons';
 
 /** 라벨 + 컨트롤 */
@@ -22,7 +22,7 @@ export function Field({
   return (
     <div className={className}>
       <Label className="mb-1.5">{label}</Label>
-      {hint && <p className="mb-1.5 text-[12px] text-ink-500">{hint}</p>}
+      {hint && <p className="mb-1.5 text-caption text-ink-500">{hint}</p>}
       {children}
     </div>
   );
@@ -32,7 +32,7 @@ export function Field({
 export function Sub({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="mt-6 border-t border-line pt-5">
-      <p className="mb-3 text-[13px] font-semibold text-ink-700">{label}</p>
+      <p className="mb-3 text-meta font-semibold text-ink-700">{label}</p>
       {children}
     </div>
   );
@@ -141,7 +141,7 @@ function RowActions({
     <div className="mb-2.5 flex items-center justify-between">
       <div className="flex items-center gap-1.5">
         {handle}
-        <span className="text-[11px] font-semibold tabular-nums text-ink-500">#{index + 1}</span>
+        <span className="text-eyebrow font-semibold tabular-nums text-ink-500">#{index + 1}</span>
       </div>
       <div className="flex gap-1">
         {onDuplicate && (
@@ -202,7 +202,7 @@ function DraggableRow<T>({
 }
 
 const ADD_BTN =
-  'flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line py-2.5 text-[13px] font-medium text-ink-500 transition-colors hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-700';
+  'flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line py-2.5 text-meta font-medium text-ink-500 transition-colors hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-700';
 
 /**
  * 리스트 항목 추가/복제/삭제/순서변경 래퍼.
@@ -269,7 +269,7 @@ export function RepeatList<T>({
     return (
       <div className="flex flex-col gap-2.5">
         {emptyHint && (
-          <p className="rounded-xl border border-dashed border-line bg-elevated px-4 py-6 text-center text-[13px] text-ink-500">
+          <p className="rounded-xl border border-dashed border-line bg-elevated px-4 py-6 text-center text-meta text-ink-500">
             {emptyHint}
           </p>
         )}
@@ -309,7 +309,7 @@ export function RepeatList<T>({
       {items.map((item, i) => (
         <div key={i} className={CARD}>
           <div className="mb-2.5 flex items-center justify-between">
-            <span className="text-[11px] font-semibold tabular-nums text-ink-500">#{i + 1}</span>
+            <span className="text-eyebrow font-semibold tabular-nums text-ink-500">#{i + 1}</span>
             <div className="flex gap-1">
               <IconBtn onClick={() => move(i, -1)} disabled={i === 0} title="위로">↑</IconBtn>
               <IconBtn onClick={() => move(i, 1)} disabled={i === items.length - 1} title="아래로">↓</IconBtn>

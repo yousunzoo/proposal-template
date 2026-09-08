@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { cn } from '@/lib/cn';
-import { Download } from '@/shared/icons';
+import { cn } from '@/shared/lib/cn';
+import { Download } from '@/shared/ui/icons';
 
 export interface NavItem {
   id: string;
@@ -92,8 +92,8 @@ export function SidebarNav({
         className="fixed left-0 top-0 z-20 hidden h-screen w-[248px] flex-col border-r border-line bg-surface/90 backdrop-blur-xl lg:flex"
       >
         <div className="border-b border-line px-6 py-7">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-600">제안서</p>
-          <p className="mt-2.5 line-clamp-3 text-[15px] font-bold leading-[1.4] tracking-[-0.3px] text-ink-900">
+          <p className="text-eyebrow font-bold uppercase tracking-[0.2em] text-blue-600">제안서</p>
+          <p className="mt-2.5 line-clamp-3 text-body font-bold leading-[1.4] tracking-[-0.3px] text-ink-900">
             {title}
           </p>
         </div>
@@ -108,7 +108,7 @@ export function SidebarNav({
                     onClick={(e) => handleClick(e, it.id)}
                     aria-current={on ? 'true' : undefined}
                     className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50',
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-body-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50',
                       on
                         ? 'bg-blue-50 text-blue-700'
                         : 'text-ink-500 hover:bg-elevated hover:text-ink-900',
@@ -133,13 +133,13 @@ export function SidebarNav({
               type="button"
               onClick={handlePdfDownload}
               disabled={isDownloading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-[14px] font-semibold text-white shadow-[0_1px_2px_rgba(15,23,42,0.08),0_8px_18px_-10px_rgba(0,126,229,0.65)] transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:bg-blue-700 disabled:cursor-wait disabled:opacity-70"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-body-sm font-semibold text-white shadow-[0_1px_2px_rgba(15,23,42,0.08),0_8px_18px_-10px_rgba(0,126,229,0.65)] transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:bg-blue-700 disabled:cursor-wait disabled:opacity-70"
             >
               <Download width={16} height={16} aria-hidden="true" />
               {isDownloading ? 'PDF 생성 중' : 'PDF 다운로드'}
             </button>
             {downloadError && (
-              <p className="mt-2 text-[12px] font-medium text-red-500" role="status">
+              <p className="mt-2 text-caption font-medium text-red-500" role="status">
                 {downloadError}
               </p>
             )}
@@ -160,7 +160,7 @@ export function SidebarNav({
               onClick={(e) => handleClick(e, it.id)}
               aria-current={active === it.id ? 'true' : undefined}
               className={cn(
-                'shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50',
+                'shrink-0 rounded-full px-3.5 py-1.5 text-meta font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50',
                 active === it.id
                   ? 'bg-blue-700 text-white'
                   : 'bg-elevated text-ink-600',
@@ -174,7 +174,7 @@ export function SidebarNav({
               type="button"
               onClick={handlePdfDownload}
               disabled={isDownloading}
-              className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-blue-700 px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:cursor-wait disabled:opacity-70"
+              className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-blue-700 px-3.5 py-1.5 text-meta font-semibold text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:cursor-wait disabled:opacity-70"
             >
               <Download width={14} height={14} aria-hidden="true" />
               {isDownloading ? '생성 중' : 'PDF'}
