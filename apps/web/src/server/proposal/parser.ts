@@ -12,9 +12,6 @@ import {
   DEFAULT_ARCH_NOTE,
   DEFAULT_QA,
   DEFAULT_STRATEGY,
-  DEFAULT_TEAM_BULLETS,
-  DEFAULT_TEAM_GROUPS,
-  DEFAULT_TEAM_INTRO,
   DEFAULT_WARRANTY_EXCLUDED,
   DEFAULT_WARRANTY_HANDOFF,
   DEFAULT_WARRANTY_INCLUDED,
@@ -335,7 +332,7 @@ function has(v: string | undefined | null): boolean {
 
 /**
  * AI 정제/파서 결과에 실제 내용이 있는 콘텐츠 섹션만 표시하는 적응형 레이아웃.
- * - 표지(greeting)와 회사 소개용 고정 섹션(about·team·strategy·architecture·qa·timeline·warranty)은 항상 표시한다.
+ * - 표지(greeting)와 회사 소개용 고정 섹션(about·strategy·architecture·qa·timeline·warranty)은 항상 표시한다.
  * - 원문에서 도출되는 analysis·estimate·portfolio·promise는 내용이 있을 때만 표시한다.
  *   (편집 화면에서 사용자가 언제든 다시 켤 수 있으므로 기본값일 뿐 강제 아님)
  */
@@ -365,12 +362,6 @@ export function assembleDoc(
       title: DEFAULT_TITLES.about,
       intro: DEFAULT_ABOUT_INTRO,
       values: DEFAULT_ABOUT_VALUES,
-    },
-    team: {
-      title: DEFAULT_TITLES.team,
-      intro: DEFAULT_TEAM_INTRO,
-      groups: DEFAULT_TEAM_GROUPS,
-      bullets: DEFAULT_TEAM_BULLETS,
     },
     analysis: {
       title: DEFAULT_TITLES.analysis,

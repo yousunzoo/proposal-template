@@ -6,7 +6,7 @@
  */
 
 /* ────────────────────────────────────────────────────────────
- * 콘텐츠 블록 (clickb PortfolioDetail.parseContent 패턴 재사용)
+ * 콘텐츠 블록 (PortfolioDetail.parseContent 패턴 재사용)
  * ──────────────────────────────────────────────────────────── */
 export type ContentBlock =
   | { kind: 'heading'; text: string }
@@ -57,16 +57,6 @@ export interface AboutValue {
   body: string;
 }
 
-export interface TeamMemberEntry {
-  name: string;
-  en: string;
-}
-
-export interface TeamGroupEntry {
-  dept: string;
-  members: TeamMemberEntry[];
-}
-
 export interface HandoffItem {
   title: string;
   body: string;
@@ -78,7 +68,6 @@ export interface HandoffItem {
 export type SectionId =
   | 'greeting'
   | 'about'
-  | 'team'
   | 'analysis'
   | 'strategy'
   | 'estimate'
@@ -98,7 +87,6 @@ export interface SectionLayoutItem {
 export const SECTION_ORDER: SectionId[] = [
   'greeting',
   'about',
-  'team',
   'analysis',
   'strategy',
   'estimate',
@@ -114,7 +102,6 @@ export const SECTION_ORDER: SectionId[] = [
 export const SECTION_LABELS: Record<SectionId, string> = {
   greeting: '인사말',
   about: '회사 소개',
-  team: '팀 소개',
   analysis: '프로젝트 분석',
   strategy: '실행 전략',
   estimate: '견적 요약',
@@ -130,7 +117,6 @@ export const SECTION_LABELS: Record<SectionId, string> = {
 export const DEFAULT_TITLES: Record<SectionId, string> = {
   greeting: '',
   about: '자사 서비스를 직접 운영해온 개발사입니다',
-  team: '전원 정규직 전문 인력으로 구성된 팀입니다',
   analysis: '프로젝트 분석',
   strategy: '4가지 실행 전략으로 접근합니다',
   estimate: '검수·테스트까지 포함한 턴키 견적입니다',
@@ -152,7 +138,6 @@ export const DEFAULT_GREETING_INTRO =
 export interface ProposalSectionsData {
   greeting: { title: string; intro: string; body: string };
   about: { title: string; intro: string[]; values: AboutValue[] };
-  team: { title: string; intro: string; groups: TeamGroupEntry[]; bullets: string[] };
   analysis: { title: string; content: string };
   strategy: { title: string; items: StrategyItem[] };
   estimate: {
@@ -217,63 +202,371 @@ export function defaultLayout(): SectionLayoutItem[] {
 }
 
 /* ────────────────────────────────────────────────────────────
+ * 런타임 검증
+ * 외부 입력이 타입 단언만으로 DB에 저장되지 않도록 API/서비스 계층에서 사용한다.
+ * ──────────────────────────────────────────────────────────── */
+
+export class ProposalValidationError extends Error {
+  constructor(public readonly issues: string[]) {
+    super(issues.join(', '));
+    this.name = 'ProposalValidationError';
+  }
+}
+
+const MAX_TITLE = 200;
+const MAX_SHORT_TEXT = 2_000;
+const MAX_LONG_TEXT = 200_000;
+const MAX_LIST_ITEMS = 100;
+const SECTION_SET = new Set<string>(SECTION_ORDER);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function pushIssue(issues: string[], path: string, message: string): void {
+  issues.push(`${path}: ${message}`);
+}
+
+function readObject(value: unknown, path: string, issues: string[]): Record<string, unknown> {
+  if (isRecord(value)) return value;
+  pushIssue(issues, path, '객체여야 합니다.');
+  return {};
+}
+
+function readString(
+  value: unknown,
+  path: string,
+  issues: string[],
+  opts: { max?: number; nonEmpty?: boolean } = {},
+): string {
+  if (typeof value !== 'string') {
+    pushIssue(issues, path, '문자열이어야 합니다.');
+    return '';
+  }
+  if (opts.nonEmpty && !value.trim()) pushIssue(issues, path, '비어 있을 수 없습니다.');
+  if (opts.max && value.length > opts.max) {
+    pushIssue(issues, path, `${opts.max}자를 넘을 수 없습니다.`);
+  }
+  return value;
+}
+
+function readOptionalString(
+  value: unknown,
+  path: string,
+  issues: string[],
+  max = MAX_SHORT_TEXT,
+): string | undefined {
+  if (value === undefined) return undefined;
+  return readString(value, path, issues, { max });
+}
+
+function readNullableNumber(value: unknown, path: string, issues: string[]): number | null {
+  if (value === null) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  pushIssue(issues, path, '숫자 또는 null이어야 합니다.');
+  return null;
+}
+
+function readPositiveInteger(value: unknown, path: string, issues: string[]): number {
+  if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
+  pushIssue(issues, path, '양의 정수여야 합니다.');
+  return 1;
+}
+
+function readBoolean(value: unknown, path: string, issues: string[]): boolean {
+  if (typeof value === 'boolean') return value;
+  pushIssue(issues, path, 'boolean이어야 합니다.');
+  return false;
+}
+
+function readStringArray(
+  value: unknown,
+  path: string,
+  issues: string[],
+  opts: { maxItems?: number; maxText?: number } = {},
+): string[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  const maxItems = opts.maxItems ?? MAX_LIST_ITEMS;
+  if (value.length > maxItems) pushIssue(issues, path, `${maxItems}개를 넘을 수 없습니다.`);
+  return value.map((item, index) =>
+    readString(item, `${path}[${index}]`, issues, { max: opts.maxText ?? MAX_SHORT_TEXT }),
+  );
+}
+
+function readProjectInfo(value: unknown, path: string, issues: string[]): ProjectInfo {
+  if (value === undefined) return {};
+  const src = readObject(value, path, issues);
+  return {
+    skills: readOptionalString(src.skills, `${path}.skills`, issues),
+    budget: readOptionalString(src.budget, `${path}.budget`, issues),
+    duration: readOptionalString(src.duration, `${path}.duration`, issues),
+  };
+}
+
+function readAboutValues(value: unknown, path: string, issues: string[]): AboutValue[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  return value.map((item, index) => {
+    const row = readObject(item, `${path}[${index}]`, issues);
+    return {
+      title: readString(row.title, `${path}[${index}].title`, issues, { max: MAX_SHORT_TEXT }),
+      body: readString(row.body, `${path}[${index}].body`, issues, { max: MAX_LONG_TEXT }),
+    };
+  });
+}
+
+function readStrategyItems(value: unknown, path: string, issues: string[]): StrategyItem[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  return value.map((item, index) => {
+    const row = readObject(item, `${path}[${index}]`, issues);
+    return {
+      index: readString(row.index, `${path}[${index}].index`, issues, { max: 20 }),
+      title: readString(row.title, `${path}[${index}].title`, issues, { max: MAX_SHORT_TEXT }),
+      body: readString(row.body, `${path}[${index}].body`, issues, { max: MAX_LONG_TEXT }),
+      tag: readString(row.tag, `${path}[${index}].tag`, issues, { max: MAX_SHORT_TEXT }),
+    };
+  });
+}
+
+function readArchLayers(value: unknown, path: string, issues: string[]): ArchLayer[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  return value.map((item, index) => {
+    const row = readObject(item, `${path}[${index}]`, issues);
+    return {
+      key: readString(row.key, `${path}[${index}].key`, issues, { max: MAX_SHORT_TEXT }),
+      label: readString(row.label, `${path}[${index}].label`, issues, { max: MAX_SHORT_TEXT }),
+      body: readString(row.body, `${path}[${index}].body`, issues, { max: MAX_LONG_TEXT }),
+    };
+  });
+}
+
+function readQaItems(value: unknown, path: string, issues: string[]): QaItem[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  return value.map((item, index) => {
+    const row = readObject(item, `${path}[${index}]`, issues);
+    return {
+      area: readString(row.area, `${path}[${index}].area`, issues, { max: MAX_SHORT_TEXT }),
+      work: readString(row.work, `${path}[${index}].work`, issues, { max: MAX_LONG_TEXT }),
+      done: readString(row.done, `${path}[${index}].done`, issues, { max: MAX_LONG_TEXT }),
+    };
+  });
+}
+
+function readTimelinePhases(value: unknown, path: string, issues: string[]): TimelinePhase[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  return value.map((item, index) => {
+    const row = readObject(item, `${path}[${index}]`, issues);
+    return {
+      label: readString(row.label, `${path}[${index}].label`, issues, { max: MAX_SHORT_TEXT }),
+      span: readString(row.span, `${path}[${index}].span`, issues, { max: MAX_SHORT_TEXT }),
+      start: readPositiveInteger(row.start, `${path}[${index}].start`, issues),
+      end: readPositiveInteger(row.end, `${path}[${index}].end`, issues),
+    };
+  });
+}
+
+function readHandoffItems(value: unknown, path: string, issues: string[]): HandoffItem[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  return value.map((item, index) => {
+    const row = readObject(item, `${path}[${index}]`, issues);
+    return {
+      title: readString(row.title, `${path}[${index}].title`, issues, { max: MAX_SHORT_TEXT }),
+      body: readString(row.body, `${path}[${index}].body`, issues, { max: MAX_LONG_TEXT }),
+    };
+  });
+}
+
+function readLayout(value: unknown, path: string, issues: string[]): SectionLayoutItem[] {
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, '배열이어야 합니다.');
+    return [];
+  }
+  const seen = new Set<string>();
+  const layout = value.map((item, index) => {
+    const row = readObject(item, `${path}[${index}]`, issues);
+    const id = readString(row.id, `${path}[${index}].id`, issues, { max: 40 }) as SectionId;
+    if (id && !SECTION_SET.has(id)) pushIssue(issues, `${path}[${index}].id`, '알 수 없는 섹션입니다.');
+    if (seen.has(id)) pushIssue(issues, `${path}[${index}].id`, '중복된 섹션입니다.');
+    seen.add(id);
+    return {
+      id,
+      visible: readBoolean(row.visible, `${path}[${index}].visible`, issues),
+    };
+  });
+  for (const id of SECTION_ORDER) {
+    if (!seen.has(id)) pushIssue(issues, path, `${id} 섹션이 누락되었습니다.`);
+  }
+  return layout;
+}
+
+export function validateProposalSectionsData(input: unknown): ProposalSectionsData {
+  const issues: string[] = [];
+  const root = readObject(input, 'sections', issues);
+
+  const greeting = readObject(root.greeting, 'sections.greeting', issues);
+  const about = readObject(root.about, 'sections.about', issues);
+  const analysis = readObject(root.analysis, 'sections.analysis', issues);
+  const strategy = readObject(root.strategy, 'sections.strategy', issues);
+  const estimate = readObject(root.estimate, 'sections.estimate', issues);
+  const portfolio = readObject(root.portfolio, 'sections.portfolio', issues);
+  const architecture = readObject(root.architecture, 'sections.architecture', issues);
+  const qa = readObject(root.qa, 'sections.qa', issues);
+  const timeline = readObject(root.timeline, 'sections.timeline', issues);
+  const warranty = readObject(root.warranty, 'sections.warranty', issues);
+  const promise = readObject(root.promise, 'sections.promise', issues);
+
+  const doc: ProposalSectionsData = {
+    greeting: {
+      title: readString(greeting.title, 'sections.greeting.title', issues, { max: MAX_TITLE }),
+      intro: readString(greeting.intro, 'sections.greeting.intro', issues, { max: MAX_LONG_TEXT }),
+      body: readString(greeting.body, 'sections.greeting.body', issues, { max: MAX_LONG_TEXT }),
+    },
+    about: {
+      title: readString(about.title, 'sections.about.title', issues, { max: MAX_TITLE }),
+      intro: readStringArray(about.intro, 'sections.about.intro', issues, { maxText: MAX_LONG_TEXT }),
+      values: readAboutValues(about.values, 'sections.about.values', issues),
+    },
+    analysis: {
+      title: readString(analysis.title, 'sections.analysis.title', issues, { max: MAX_TITLE }),
+      content: readString(analysis.content, 'sections.analysis.content', issues, { max: MAX_LONG_TEXT }),
+    },
+    strategy: {
+      title: readString(strategy.title, 'sections.strategy.title', issues, { max: MAX_TITLE }),
+      items: readStrategyItems(strategy.items, 'sections.strategy.items', issues),
+    },
+    estimate: {
+      title: readString(estimate.title, 'sections.estimate.title', issues, { max: MAX_TITLE }),
+      cost: readString(estimate.cost, 'sections.estimate.cost', issues, { max: MAX_SHORT_TEXT }),
+      costValue: readNullableNumber(estimate.costValue, 'sections.estimate.costValue', issues),
+      period: readString(estimate.period, 'sections.estimate.period', issues, { max: MAX_SHORT_TEXT }),
+      periodValue: readNullableNumber(estimate.periodValue, 'sections.estimate.periodValue', issues),
+      warranty: readString(estimate.warranty, 'sections.estimate.warranty', issues, { max: MAX_SHORT_TEXT }),
+      note: readString(estimate.note, 'sections.estimate.note', issues, { max: MAX_LONG_TEXT }),
+    },
+    portfolio: {
+      title: readString(portfolio.title, 'sections.portfolio.title', issues, { max: MAX_TITLE }),
+      description: readOptionalString(portfolio.description, 'sections.portfolio.description', issues, MAX_LONG_TEXT),
+    },
+    architecture: {
+      title: readString(architecture.title, 'sections.architecture.title', issues, { max: MAX_TITLE }),
+      note: readString(architecture.note, 'sections.architecture.note', issues, { max: MAX_LONG_TEXT }),
+      layers: readArchLayers(architecture.layers, 'sections.architecture.layers', issues),
+    },
+    qa: {
+      title: readString(qa.title, 'sections.qa.title', issues, { max: MAX_TITLE }),
+      items: readQaItems(qa.items, 'sections.qa.items', issues),
+    },
+    timeline: {
+      title: readString(timeline.title, 'sections.timeline.title', issues, { max: MAX_TITLE }),
+      totalWeeks: readPositiveInteger(timeline.totalWeeks, 'sections.timeline.totalWeeks', issues),
+      phases: readTimelinePhases(timeline.phases, 'sections.timeline.phases', issues),
+    },
+    warranty: {
+      title: readString(warranty.title, 'sections.warranty.title', issues, { max: MAX_TITLE }),
+      included: readStringArray(warranty.included, 'sections.warranty.included', issues, { maxText: MAX_LONG_TEXT }),
+      excluded: readStringArray(warranty.excluded, 'sections.warranty.excluded', issues, { maxText: MAX_LONG_TEXT }),
+      handoff: readHandoffItems(warranty.handoff, 'sections.warranty.handoff', issues),
+    },
+    promise: {
+      title: readString(promise.title, 'sections.promise.title', issues, { max: MAX_TITLE }),
+      body: readString(promise.body, 'sections.promise.body', issues, { max: MAX_LONG_TEXT }),
+      commitments: readStringArray(promise.commitments, 'sections.promise.commitments', issues, { maxText: MAX_LONG_TEXT }),
+    },
+    layout: readLayout(root.layout, 'sections.layout', issues),
+  };
+
+  if (issues.length) throw new ProposalValidationError(issues);
+  return doc;
+}
+
+export function validateCreateProposalInput(input: unknown): CreateProposalInput {
+  const issues: string[] = [];
+  const root = readObject(input, 'body', issues);
+  const result: CreateProposalInput = {
+    title: readString(root.title, 'body.title', issues, { max: MAX_TITLE, nonEmpty: true }).trim(),
+    projectInfo: readProjectInfo(root.projectInfo, 'body.projectInfo', issues),
+    rawProposalContent: readString(root.rawProposalContent, 'body.rawProposalContent', issues, {
+      max: MAX_LONG_TEXT,
+      nonEmpty: true,
+    }),
+    rawPortfolioContent: readOptionalString(root.rawPortfolioContent, 'body.rawPortfolioContent', issues, MAX_LONG_TEXT),
+    portfolioSlugs:
+      root.portfolioSlugs === undefined
+        ? undefined
+        : readStringArray(root.portfolioSlugs, 'body.portfolioSlugs', issues, { maxItems: MAX_LIST_ITEMS }),
+  };
+
+  if (issues.length) throw new ProposalValidationError(issues);
+  return result;
+}
+
+export function validateUpdateProposalInput(input: unknown): UpdateProposalInput {
+  const issues: string[] = [];
+  const root = readObject(input, 'body', issues);
+  const result: UpdateProposalInput = {};
+
+  if ('title' in root) {
+    result.title = readString(root.title, 'body.title', issues, { max: MAX_TITLE, nonEmpty: true }).trim();
+  }
+  if ('projectInfo' in root) {
+    result.projectInfo = readProjectInfo(root.projectInfo, 'body.projectInfo', issues);
+  }
+  if ('sections' in root) {
+    result.sections = validateProposalSectionsData(root.sections);
+  }
+  if ('portfolioSlugs' in root) {
+    result.portfolioSlugs = readStringArray(root.portfolioSlugs, 'body.portfolioSlugs', issues, {
+      maxItems: MAX_LIST_ITEMS,
+    });
+  }
+
+  if (issues.length) throw new ProposalValidationError(issues);
+  return result;
+}
+
+/* ────────────────────────────────────────────────────────────
  * 기본 콘텐츠 (파서/정규화 공용 시드)
- * NOTE: 발주 플랫폼 제약상 회사명·연락처 등 신원 정보는 포함하지 않는다.
+ * NOTE: 기본값에는 회사명·연락처·개인명·고객사명 등 식별 정보를 포함하지 않는다.
  * ──────────────────────────────────────────────────────────── */
 export const DEFAULT_ABOUT_INTRO: string[] = [
-  "저희는 2021년 법인 설립 이후, 5억 원 규모의 부동산 대출 중개·매칭 플랫폼 '뱅크몰'을 자사 서비스(누적 사용자 800만 명, 월 방문자 10만 명 규모)로 직접 기획·개발하며 서비스를 시작했습니다.",
-  '서비스 초기 기획 단계부터 UX 설계, 디자인, 프론트엔드·백엔드 개발, 운영 및 고도화까지 전 과정을 내부 인력으로 수행해왔으며, 이를 통해 실사용자 중심의 서비스 운영 경험과 기술적 완성도를 동시에 축적해왔습니다.',
-  '현재는 다양한 플랫폼 및 IT 프로젝트를 계약·수행하고 있으며, 단순 개발사가 아닌 서비스 성장까지 함께 설계하는 파트너로 자리하고 있습니다.',
+  '프로젝트 초기 기획부터 UX 설계, 디자인, 프론트엔드·백엔드 개발, 운영 고도화까지 하나의 흐름으로 수행하는 제품 개발 팀입니다.',
+  '사용자 화면과 운영자 시스템을 함께 설계해, 출시 이후에도 관리하기 쉽고 확장 가능한 서비스를 만드는 데 집중합니다.',
+  '단순 화면 제작이 아니라 요구사항, 데이터 구조, 운영 절차, QA 기준까지 함께 정리하는 실행 파트너를 지향합니다.',
 ];
 
 export const DEFAULT_ABOUT_VALUES: AboutValue[] = [
   {
     title: '경험과 신뢰',
-    body: '2022년부터 자사 서비스를 운영하며 실제 사용자의 피드백을 반영해 더 나은 사용자 경험(UX)을 제공해왔습니다. 실제 경험을 바탕으로 고객의 신뢰를 얻고 비즈니스 성과를 창출할 수 있도록 돕습니다.',
+    body: '실제 운영 상황에서 발생하는 사용자 피드백, 관리자 업무, 예외 상황을 고려해 서비스 구조를 설계합니다.',
   },
   {
     title: '확장성과 유연함',
-    body: '200여 개 금융사와의 제휴를 확장하는 과정에서 각 금융 상품의 특성에 맞춘 새로운 기능을 개발하며 신속하고 유연하게 대응해왔습니다. 쉽게 관리하고, 확장 가능한 시스템을 설계합니다.',
+    body: '정책과 기능이 바뀌어도 데이터 구조와 화면 흐름을 무리 없이 확장할 수 있도록 공통 영역과 커스텀 영역을 분리합니다.',
   },
   {
     title: '장기적 안정성',
-    body: '저희 역시 외주 개발의 아쉬움을 경험한 뒤 실력 있는 개발팀을 직접 구축했습니다. 전문성 있는 인력이 장기적으로 안정적인 최고의 결과물을 만듭니다.',
+    body: '개발 완료 이후의 운영, QA, 인수인계까지 고려해 프로젝트가 안정적으로 이어지도록 기준을 남깁니다.',
   },
-];
-
-export const DEFAULT_TEAM_INTRO =
-  'PM, 기획, 개발, 디자인 각 분야의 전문성을 갖춘 팀원(전원 정규직)들이 명확한 역할 분담과 체계적인 협업 프로세스를 바탕으로 프로젝트를 수행합니다.';
-
-export const DEFAULT_TEAM_GROUPS: TeamGroupEntry[] = [
-  {
-    dept: 'PM / 기획',
-    members: [
-      { name: '박상우', en: 'PARK SANG-WOO' },
-      { name: '김단중', en: 'KIM DAN-JUNG' },
-      { name: '김나연', en: 'KIM NA-YEON' },
-    ],
-  },
-  { dept: '디자인', members: [{ name: '김다은', en: 'KIM DA-EUN' }] },
-  {
-    dept: '개발 (Front-End)',
-    members: [
-      { name: '황재영', en: 'HWANG JAE-YOUNG' },
-      { name: '유선주', en: 'YU SUN-JOO' },
-    ],
-  },
-  {
-    dept: '개발 (Back-End)',
-    members: [
-      { name: '최민규', en: 'CHOI MIN-KYU' },
-      { name: '최우석', en: 'CHOI WOO-SEOK' },
-    ],
-  },
-];
-
-export const DEFAULT_TEAM_BULLETS: string[] = [
-  '기획, 디자인, 프론트엔드, 백엔드 등 각 분야의 전문 인력으로 구성된 통합 팀',
-  '자사 서비스의 기획부터 개발, 운영·고도화까지 전 과정을 직접 수행',
-  '설립 초기부터 함께해온 팀으로 다수의 프로젝트를 안정적으로 완수',
 ];
 
 export const DEFAULT_STRATEGY: StrategyItem[] = [
@@ -335,12 +628,6 @@ export function createDefaultDoc(): ProposalSectionsData {
   return {
     greeting: { title: DEFAULT_TITLES.greeting, intro: DEFAULT_GREETING_INTRO, body: '' },
     about: { title: DEFAULT_TITLES.about, intro: DEFAULT_ABOUT_INTRO, values: DEFAULT_ABOUT_VALUES },
-    team: {
-      title: DEFAULT_TITLES.team,
-      intro: DEFAULT_TEAM_INTRO,
-      groups: DEFAULT_TEAM_GROUPS,
-      bullets: DEFAULT_TEAM_BULLETS,
-    },
     analysis: { title: DEFAULT_TITLES.analysis, content: '' },
     strategy: { title: DEFAULT_TITLES.strategy, items: DEFAULT_STRATEGY },
     estimate: {
@@ -413,7 +700,6 @@ export function normalizeDoc(
   return {
     greeting: merge('greeting'),
     about: merge('about'),
-    team: merge('team'),
     analysis: normalizeAnalysis(i.analysis),
     strategy: merge('strategy'),
     estimate: merge('estimate'),
